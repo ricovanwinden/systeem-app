@@ -37,14 +37,19 @@ Het JSON object moet deze velden bevatten:
   "datum": "datum in YYYY-MM-DD formaat",
   "monteur": "naam van de monteur of uitvoerder",
   "werkzaamheden": "type werkzaamheden",
+  "doormeldgegevens": [
+    { "label": "veldnaam", "waarde": "waarde" }
+  ],
   "extraGegevens": [
     { "label": "veldnaam", "waarde": "waarde" }
   ]
 }
 
-Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc. Elk gevonden gegeven wordt een apart object met "label" en "waarde".
+Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie zoals IP-adres, poort, accountnummer, klantnummer, alarmcentrale, meldkamer, doormelding, SIA, CID, polling, receiver, transmitter, AMS, telefoonnummer doormelding, etc. Elk gevonden gegeven wordt een apart object.
 
-Als een hoofdveld niet gevonden wordt, gebruik dan een lege string. Als er geen extra gegevens zijn, gebruik dan een lege array [].`,
+Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc.
+
+Als een veld niet gevonden wordt gebruik dan een lege string of lege array [].`,
           },
         ],
       }],
