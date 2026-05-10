@@ -307,6 +307,8 @@ export default function App() {
     URL.revokeObjectURL(url);
   }
 
+  const [scannerKey, setScannerKey] = useState(0);
+
   function nieuwProject() {
     if (!confirm("Weet je zeker dat je een nieuw project wilt starten? Alle huidige gegevens worden gewist.")) return;
     setInfo(defaultInfo);
@@ -315,6 +317,9 @@ export default function App() {
     setVentRijen(defaultVentRijen);
     setLogboek(defaultLogboek);
     setAantekeningen("");
+    setWerkbonExtra([]);
+    setWerkbonDoormel([]);
+    setScannerKey(k => k + 1);
   }
 
   const bmRust = parseFloat(bm.ruststroom), bmAlarm = parseFloat(bm.alarmstroom), bmUren = parseInt(bm.onderhoudscontract);
@@ -400,6 +405,7 @@ export default function App() {
             {/* WERKBON SCANNER */}
             <Card icon="📷" title="Werkbon scannen — upload een foto">
               <WerkbonScanner
+                key={scannerKey}
                 onResult={(data: any) => setInfo(prev => ({ ...prev, ...data }))}
                 onExtraData={(extra, doormel) => { setWerkbonExtra(extra); setWerkbonDoormel(doormel); }}
               />
