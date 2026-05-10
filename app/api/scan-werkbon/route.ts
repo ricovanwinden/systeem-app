@@ -43,7 +43,8 @@ Het JSON object moet deze velden bevatten:
   "extraGegevens": [
     { "label": "veldnaam", "waarde": "waarde" }
   ],
-  "waarschuwingen": ["tekst van de waarschuwing"]
+  "waarschuwingen": ["tekst van de waarschuwing"],
+  "meldingen": ["tekst van de melding"]
 }
 
 Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie zoals IP-adres, poort, accountnummer, klantnummer, alarmcentrale, meldkamer, doormelding, SIA, CID, polling, receiver, transmitter, AMS, telefoonnummer doormelding, etc.
@@ -51,6 +52,8 @@ Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie zoals IP-adres, 
 Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc.
 
 Voor "waarschuwingen": zoek naar alle opmerkingen, aandachtspunten of notities op de werkbon die beginnen met "let op", "attentie", "belangrijk", "opgelet", "waarschuwing", "LET OP", "!!" of vergelijkbare waarschuwingsteksten. Geef elke waarschuwing als losse string terug. Als er geen zijn, gebruik dan een lege array [].
+
+Voor "meldingen": zoek naar instructies die aangeven dat iets gemeld of doorgegeven moet worden aan een persoon of afdeling. Denk aan zinnen zoals "melden bij", "doorgeven aan", "contact opnemen met", "bijzonderheden melden", "storingen melden bij", "altijd bellen naar", etc. Geef elke melding als losse string inclusief de naam/contactpersoon. Als er geen zijn, gebruik dan een lege array [].
 
 Als een veld niet gevonden wordt gebruik dan een lege string of lege array [].`,
           },
