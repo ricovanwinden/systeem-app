@@ -193,9 +193,12 @@ const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ datumUit: 
 
 export default function App() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [gebruiker, setGebruiker] = useState<any>(null);
   const [opslaanMelding, setOpslaanMelding] = useState("");
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const g = localStorage.getItem("gebruiker");
@@ -276,6 +279,8 @@ export default function App() {
     { id: "logboek", label: "Logboek", icon: "📓", color: "#8b5cf6" },
     { id: "aantekeningen", label: "Notities", icon: "✏️", color: "#10b981" },
   ];
+
+  if (!mounted) return null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
