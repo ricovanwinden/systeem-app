@@ -1,5 +1,8 @@
 import { NextRequest } from "next/server";
 
+export const runtime = "edge";
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   const { base64, mediaType } = await request.json();
 
@@ -17,7 +20,7 @@ export async function POST(request: NextRequest) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 1000,
+      max_tokens: 2000,
       messages: [{
         role: "user",
         content: [
@@ -57,10 +60,15 @@ Als een hoofdveld niet gevonden wordt, gebruik dan een lege string. Als er geen 
 
   const data = await res.json();
   const tekst = data.content?.[0]?.text ?? "";
-  const clean = tekst.replace(/```json|```/g, "").trim();
+
+  // Zoek het JSON object in de tekst, ook als het model extra tekst toevoegt
+  const match = tekst.match(/\{[\s\S]*\}/);
+  if (!match) {
+    return Response.json({ error: "Geen JSON gevonden in response", raw: tekst }, { status: 500 });
+  }
 
   try {
-    return Response.json(JSON.parse(clean));
+    return Response.json(JSON.parse(match[0]));
   } catch {
     return Response.json({ error: "Kon geen JSON parsen", raw: tekst }, { status: 500 });
   }
