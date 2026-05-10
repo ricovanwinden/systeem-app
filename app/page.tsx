@@ -64,30 +64,48 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
     setBezig(true);
     setMelding("Werkbon wordt gelezen...");
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = (reader.result as string).split(",")[1];
-      setPreview(reader.result as string);
+    try {
+      // Zet altijd om naar JPEG via canvas — werkt met HEIC, PNG, WebP, etc.
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX = 1600;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+          };
+          img.onerror = reject;
+          img.src = reader.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      try {
-        const response = await fetch("/api/scan-werkbon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ base64, mediaType: file.type }),
-        });
+      setPreview(dataUrl);
+      const base64 = dataUrl.split(",")[1];
 
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error ?? "Onbekende fout");
-        }
-        onResult(data);
-        setMelding("✅ Gegevens ingevuld! Controleer en pas aan waar nodig.");
-      } catch (err: any) {
-        setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
-      }
-      setBezig(false);
-    };
-    reader.readAsDataURL(file);
+      const response = await fetch("/api/scan-werkbon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64, mediaType: "image/jpeg" }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
+      onResult(data);
+      setMelding("✅ Gegevens ingevuld! Controleer en pas aan waar nodig.");
+    } catch (err: any) {
+      setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
+    }
+    setBezig(false);
   }
 
   return (
