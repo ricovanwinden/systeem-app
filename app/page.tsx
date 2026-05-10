@@ -57,6 +57,8 @@ function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => vo
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [waarschuwingen, setWaarschuwingen] = useState<string[]>([]);
+  const [activePopup, setActivePopup] = useState<string | null>(null);
 
   async function verwerkFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -100,9 +102,11 @@ function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => vo
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
-      const { extraGegevens: extra = [], doormeldgegevens: doormel = [], ...hoofdVelden } = data;
+      const { extraGegevens: extra = [], doormeldgegevens: doormel = [], waarschuwingen: warns = [], ...hoofdVelden } = data;
       onResult(hoofdVelden);
       onExtraData(extra, doormel);
+      setWaarschuwingen(warns);
+      if (warns.length > 0) setActivePopup(warns[0]);
       setMelding("✅ Gegevens ingevuld! Ga naar het tabblad 'Werkbon' voor alle overige gegevens.");
     } catch (err: any) {
       setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
@@ -130,6 +134,34 @@ function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => vo
       {melding && (
         <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 10, background: melding.startsWith("✅") ? "#f0fdf4" : melding.startsWith("❌") ? "#fef2f2" : "#eff6ff", color: melding.startsWith("✅") ? "#166534" : melding.startsWith("❌") ? "#991b1b" : "#1d4ed8", fontWeight: 600, fontSize: 14 }}>
           {melding}
+        </div>
+      )}
+
+      {/* WAARSCHUWING POPUP */}
+      {activePopup && (
+        <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 360, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ textAlign: "center" as const, marginBottom: 20 }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 8 }}>Let op</div>
+              <p style={{ fontSize: 16, fontWeight: 600, color: "#0f172a", margin: 0, lineHeight: 1.5 }}>{activePopup}</p>
+            </div>
+            <button
+              onClick={() => {
+                const idx = waarschuwingen.indexOf(activePopup);
+                const volgende = waarschuwingen[idx + 1] ?? null;
+                setActivePopup(volgende);
+              }}
+              style={{ width: "100%", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
+            >
+              OK — Begrepen
+            </button>
+            {waarschuwingen.length > 1 && (
+              <div style={{ textAlign: "center" as const, marginTop: 10, fontSize: 12, color: "#94a3b8" }}>
+                {waarschuwingen.indexOf(activePopup) + 1} van {waarschuwingen.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
