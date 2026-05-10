@@ -57,6 +57,7 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [extraGegevens, setExtraGegevens] = useState<{ label: string; waarde: string }[]>([]);
 
   async function verwerkFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -100,7 +101,9 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
-      onResult(data);
+      const { extraGegevens: extra = [], ...hoofdVelden } = data;
+      onResult(hoofdVelden);
+      setExtraGegevens(extra);
       setMelding("✅ Gegevens ingevuld! Controleer en pas aan waar nodig.");
     } catch (err: any) {
       setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
@@ -128,6 +131,23 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
       {melding && (
         <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 10, background: melding.startsWith("✅") ? "#f0fdf4" : melding.startsWith("❌") ? "#fef2f2" : "#eff6ff", color: melding.startsWith("✅") ? "#166534" : melding.startsWith("❌") ? "#991b1b" : "#1d4ed8", fontWeight: 600, fontSize: 14 }}>
           {melding}
+        </div>
+      )}
+      {extraGegevens.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 10 }}>
+            Overige gegevens van de werkbon
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
+            <tbody>
+              {extraGegevens.map((r, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "8px 12px 8px 0", color: "#64748b", fontWeight: 600, whiteSpace: "nowrap" as const, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
+                  <td style={{ padding: "8px 0", color: "#0f172a" }}>{r.waarde}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

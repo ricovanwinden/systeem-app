@@ -24,16 +24,24 @@ export async function POST(request: NextRequest) {
           { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
           {
             type: "text",
-            text: `Lees deze werkbon en geef ALLEEN een JSON object terug, geen andere tekst, met deze velden:
+            text: `Lees deze werkbon zorgvuldig en geef ALLEEN een JSON object terug, geen andere tekst.
+
+Het JSON object moet deze velden bevatten:
 {
   "opdrachtgever": "naam van het bedrijf/opdrachtgever",
-  "projectnaam": "naam van het project",
+  "projectnaam": "naam van het project of locatie",
   "projectnummer": "projectcode of werkopdrachtnummer",
   "datum": "datum in YYYY-MM-DD formaat",
-  "monteur": "naam van de monteur/uitvoering door",
-  "werkzaamheden": "type werkzaamheden"
+  "monteur": "naam van de monteur of uitvoerder",
+  "werkzaamheden": "type werkzaamheden",
+  "extraGegevens": [
+    { "label": "veldnaam", "waarde": "waarde" }
+  ]
 }
-Als een veld niet gevonden wordt, gebruik dan een lege string.`,
+
+Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc. Elk gevonden gegeven wordt een apart object met "label" en "waarde".
+
+Als een hoofdveld niet gevonden wordt, gebruik dan een lege string. Als er geen extra gegevens zijn, gebruik dan een lege array [].`,
           },
         ],
       }],
