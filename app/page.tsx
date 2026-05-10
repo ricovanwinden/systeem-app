@@ -102,7 +102,7 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
         boxShadow: bezig ? "none" : "0 4px 12px rgba(59,130,246,0.3)"
       }}>
         📷 {bezig ? "Bezig..." : "Foto uploaden"}
-        <input type="file" accept="image/*" capture="environment" onChange={verwerkFoto} style={{ display: "none" }} disabled={bezig} />
+        <input type="file" accept="image/*" onChange={verwerkFoto} style={{ display: "none" }} disabled={bezig} />
       </label>
       {preview && (
         <img src={preview} alt="werkbon" style={{ marginTop: 16, maxWidth: "100%", maxHeight: 200, borderRadius: 12, objectFit: "contain", border: "2px solid #e2e8f0" }} />
