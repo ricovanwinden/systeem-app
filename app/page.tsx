@@ -5,7 +5,7 @@ const LOGO = "data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJ
 import { useState } from "react";
 
 
-type Tab = "info" | "brandmeld" | "gasdetectie" | "ventilatie" | "logboek" | "aantekeningen";
+type Tab = "info" | "brandmeld" | "gasdetectie" | "ventilatie" | "logboek" | "aantekeningen" | "werkbon";
 
 interface ProjectInfo {
   opdrachtgever: string; projectnaam: string; projectnummer: string; datum: string;
@@ -53,12 +53,10 @@ const defaultGasChecklist = [
   "Signaalgevers functioneel?", "Datum onderhoud in logboek?",
 ].map(v => ({ vraag: v, status: "???", opmerking: "" }));
 
-function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
+function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void }) {
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [extraGegevens, setExtraGegevens] = useState<{ label: string; waarde: string }[]>([]);
-  const [doormeldGegevens, setDoormeldGegevens] = useState<{ label: string; waarde: string }[]>([]);
 
   async function verwerkFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -104,9 +102,8 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
       if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
       const { extraGegevens: extra = [], doormeldgegevens: doormel = [], ...hoofdVelden } = data;
       onResult(hoofdVelden);
-      setExtraGegevens(extra);
-      setDoormeldGegevens(doormel);
-      setMelding("✅ Gegevens ingevuld! Controleer en pas aan waar nodig.");
+      onExtraData(extra, doormel);
+      setMelding("✅ Gegevens ingevuld! Ga naar het tabblad 'Werkbon' voor alle overige gegevens.");
     } catch (err: any) {
       setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
     }
@@ -133,40 +130,6 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
       {melding && (
         <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 10, background: melding.startsWith("✅") ? "#f0fdf4" : melding.startsWith("❌") ? "#fef2f2" : "#eff6ff", color: melding.startsWith("✅") ? "#166534" : melding.startsWith("❌") ? "#991b1b" : "#1d4ed8", fontWeight: 600, fontSize: 14 }}>
           {melding}
-        </div>
-      )}
-      {doormeldGegevens.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 12, color: "#3b82f6", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 10 }}>
-            📡 Doormeldgegevens
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14, background: "#eff6ff", borderRadius: 10, overflow: "hidden" as const }}>
-            <tbody>
-              {doormeldGegevens.map((r, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #dbeafe" }}>
-                  <td style={{ padding: "8px 12px", color: "#1d4ed8", fontWeight: 600, whiteSpace: "nowrap" as const, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
-                  <td style={{ padding: "8px 12px", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace" }}>{r.waarde}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {extraGegevens.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 10 }}>
-            Overige gegevens van de werkbon
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
-            <tbody>
-              {extraGegevens.map((r, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "8px 12px 8px 0", color: "#64748b", fontWeight: 600, whiteSpace: "nowrap" as const, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
-                  <td style={{ padding: "8px 0", color: "#0f172a" }}>{r.waarde}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </div>
@@ -262,6 +225,8 @@ export default function App() {
   const [aantekeningen, setAantekeningen] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
+  const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
+  const [werkbonDoormel, setWerkbonDoormel] = useState<{ label: string; waarde: string }[]>([]);
 
   // Laad opgeslagen gegevens na hydration (localStorage alleen beschikbaar in browser)
   useEffect(() => {
@@ -373,6 +338,7 @@ export default function App() {
     { id: "ventilatie", label: "Ventilatie", icon: "💨", color: "#06b6d4" },
     { id: "logboek", label: "Logboek", icon: "📓", color: "#8b5cf6" },
     { id: "aantekeningen", label: "Notities", icon: "✏️", color: "#10b981" },
+    { id: "werkbon", label: "Werkbon", icon: "📄", color: "#64748b" },
   ];
 
   if (!mounted) return null;
@@ -433,7 +399,10 @@ export default function App() {
 
             {/* WERKBON SCANNER */}
             <Card icon="📷" title="Werkbon scannen — upload een foto">
-              <WerkbonScanner onResult={(data: any) => setInfo(prev => ({ ...prev, ...data }))} />
+              <WerkbonScanner
+                onResult={(data: any) => setInfo(prev => ({ ...prev, ...data }))}
+                onExtraData={(extra, doormel) => { setWerkbonExtra(extra); setWerkbonDoormel(doormel); }}
+              />
             </Card>
 
             <Card icon="🏢" title="Opdrachtgever & project">
@@ -709,6 +678,51 @@ export default function App() {
                 </button>
               ))}
             </Card>
+          </div>
+        )}
+
+        {tab === "werkbon" && (
+          <div>
+            <div style={{ marginBottom: 22 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Werkbon gegevens</h1>
+              <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Alle gegevens uitgelezen van de gescande werkbon</p>
+            </div>
+            {werkbonDoormel.length === 0 && werkbonExtra.length === 0 ? (
+              <Card icon="📄" title="Nog geen werkbon gescand">
+                <p style={{ color: "#64748b", fontSize: 14, margin: 0 }}>Ga naar het tabblad <strong>Project</strong> en upload een foto van de werkbon. De gegevens verschijnen dan hier.</p>
+              </Card>
+            ) : (
+              <>
+                {werkbonDoormel.length > 0 && (
+                  <Card icon="📡" title="Doormeldgegevens">
+                    <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
+                      <tbody>
+                        {werkbonDoormel.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid #dbeafe" }}>
+                            <td style={{ padding: "10px 12px 10px 0", color: "#1d4ed8", fontWeight: 600, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
+                            <td style={{ padding: "10px 0", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace" }}>{r.waarde}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                )}
+                {werkbonExtra.length > 0 && (
+                  <Card icon="📋" title="Overige werkbon gegevens">
+                    <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
+                      <tbody>
+                        {werkbonExtra.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "10px 12px 10px 0", color: "#64748b", fontWeight: 600, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
+                            <td style={{ padding: "10px 0", color: "#0f172a" }}>{r.waarde}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                )}
+              </>
+            )}
           </div>
         )}
 
