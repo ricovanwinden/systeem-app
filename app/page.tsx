@@ -256,6 +256,17 @@ export default function App() {
     setTimeout(() => setOpslaanMelding(""), 2500);
   }
 
+  function downloadBestand() {
+    const bestandsnaam = `werkbon-${info.opdrachtgever || "project"}-${info.datum || new Date().toISOString().slice(0, 10)}.json`
+      .replace(/[^a-z0-9.\-_]/gi, "-");
+    const inhoud = JSON.stringify({ info, bm, gas, ventRijen, logboek, aantekeningen }, null, 2);
+    const blob = new Blob([inhoud], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = bestandsnaam; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function nieuwProject() {
     if (!confirm("Weet je zeker dat je een nieuw project wilt starten? Alle huidige gegevens worden gewist.")) return;
     setInfo(defaultInfo);
@@ -310,6 +321,7 @@ export default function App() {
               💾 Opslaan
             </button>
             {opslaanMelding && <span style={{ color: "#10b981", fontSize: 12, fontWeight: 600 }}>{opslaanMelding}</span>}
+            <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
             <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
             <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
           </div>
