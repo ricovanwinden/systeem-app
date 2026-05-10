@@ -203,24 +203,34 @@ export default function App() {
     setGebruiker(JSON.parse(g));
   }, []);
 
-  const [info, setInfo] = useState<ProjectInfo>(() => {
-    try { const s = localStorage.getItem("werkbon_info"); return s ? JSON.parse(s) : defaultInfo; } catch { return defaultInfo; }
-  });
-  const [bm, setBm] = useState<BrandmeldData>(() => {
-    try { const s = localStorage.getItem("werkbon_bm"); return s ? JSON.parse(s) : defaultBm; } catch { return defaultBm; }
-  });
-  const [gas, setGas] = useState<GasdetectieData>(() => {
-    try { const s = localStorage.getItem("werkbon_gas"); return s ? JSON.parse(s) : defaultGas; } catch { return defaultGas; }
-  });
-  const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(() => {
-    try { const s = localStorage.getItem("werkbon_vent"); return s ? JSON.parse(s) : defaultVentRijen; } catch { return defaultVentRijen; }
-  });
-  const [logboek, setLogboek] = useState<LogboekRij[]>(() => {
-    try { const s = localStorage.getItem("werkbon_logboek"); return s ? JSON.parse(s) : defaultLogboek; } catch { return defaultLogboek; }
-  });
-  const [aantekeningen, setAantekeningen] = useState(() => {
-    try { return localStorage.getItem("werkbon_aantekeningen") ?? ""; } catch { return ""; }
-  });
+  const [info, setInfo] = useState<ProjectInfo>(defaultInfo);
+  const [bm, setBm] = useState<BrandmeldData>(defaultBm);
+  const [gas, setGas] = useState<GasdetectieData>(defaultGas);
+  const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(defaultVentRijen);
+  const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
+  const [aantekeningen, setAantekeningen] = useState("");
+
+  // Laad opgeslagen gegevens na hydration (localStorage alleen beschikbaar in browser)
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem("werkbon_info"); if (s) setInfo(JSON.parse(s));
+    } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_bm"); if (s) setBm(JSON.parse(s));
+    } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_gas"); if (s) setGas(JSON.parse(s));
+    } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_vent"); if (s) setVentRijen(JSON.parse(s));
+    } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_logboek"); if (s) setLogboek(JSON.parse(s));
+    } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
+    } catch {}
+  }, []);
 
   useEffect(() => { localStorage.setItem("werkbon_info", JSON.stringify(info)); }, [info]);
   useEffect(() => { localStorage.setItem("werkbon_bm", JSON.stringify(bm)); }, [bm]);
