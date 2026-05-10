@@ -221,6 +221,8 @@ export default function App() {
   const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(defaultVentRijen);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
+  const [projecten, setProjecten] = useState<any[]>([]);
+  const [toonProjecten, setToonProjecten] = useState(false);
 
   // Laad opgeslagen gegevens na hydration (localStorage alleen beschikbaar in browser)
   useEffect(() => {
@@ -242,6 +244,9 @@ export default function App() {
     try {
       const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
     } catch {}
+    try {
+      const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
+    } catch {}
   }, []);
 
   useEffect(() => { localStorage.setItem("werkbon_info", JSON.stringify(info)); }, [info]);
@@ -254,6 +259,37 @@ export default function App() {
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
     setTimeout(() => setOpslaanMelding(""), 2500);
+  }
+
+  function slaOpAlsProject() {
+    const naam = info.opdrachtgever || "Naamloos project";
+    const nieuw = {
+      id: Date.now(),
+      naam,
+      opdrachtgever: info.opdrachtgever,
+      datum: info.datum,
+      opgeslagenOp: new Date().toLocaleString("nl-NL"),
+      data: { info, bm, gas, ventRijen, logboek, aantekeningen },
+    };
+    const bijgewerkt = [nieuw, ...projecten].slice(0, 50);
+    setProjecten(bijgewerkt);
+    localStorage.setItem("werkbon_projecten", JSON.stringify(bijgewerkt));
+    setOpslaanMelding(`✅ "${naam}" opgeslagen!`);
+    setTimeout(() => setOpslaanMelding(""), 3000);
+  }
+
+  function laadProject(p: any) {
+    if (!confirm(`Huidig project wordt vervangen door "${p.naam}". Doorgaan?`)) return;
+    setInfo(p.data.info); setBm(p.data.bm); setGas(p.data.gas);
+    setVentRijen(p.data.ventRijen); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
+    setToonProjecten(false);
+    setTab("info");
+  }
+
+  function verwijderProject(id: number) {
+    const bijgewerkt = projecten.filter(p => p.id !== id);
+    setProjecten(bijgewerkt);
+    localStorage.setItem("werkbon_projecten", JSON.stringify(bijgewerkt));
   }
 
   function downloadBestand() {
@@ -317,10 +353,13 @@ export default function App() {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <button onClick={handmatigOpslaan} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+            <button onClick={slaOpAlsProject} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
               💾 Opslaan
             </button>
-            {opslaanMelding && <span style={{ color: "#10b981", fontSize: 12, fontWeight: 600 }}>{opslaanMelding}</span>}
+            {opslaanMelding && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{opslaanMelding}</span>}
+            <button onClick={() => setToonProjecten(true)} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
+              📂 {projecten.length > 0 && <span style={{ position: "absolute" as const, top: 2, right: 2, background: "#3b82f6", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{projecten.length}</span>}
+            </button>
             <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
             <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
             <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
@@ -635,6 +674,40 @@ export default function App() {
         )}
 
       </div>
+
+      {/* PROJECTEN PANEEL */}
+      {toonProjecten && (
+        <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => setToonProjecten(false)}>
+          <div style={{ background: "#fff", width: "100%", maxHeight: "80vh", borderRadius: "20px 20px 0 0", padding: 24, overflowY: "auto" as const }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#0f172a" }}>Opgeslagen projecten</h2>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>{projecten.length} project{projecten.length !== 1 ? "en" : ""} opgeslagen op dit apparaat</p>
+              </div>
+              <button onClick={() => setToonProjecten(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Sluiten</button>
+            </div>
+            {projecten.length === 0 ? (
+              <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
+                <p style={{ margin: 0 }}>Nog geen projecten opgeslagen.<br/>Druk op 💾 Opslaan om te beginnen.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                {projecten.map(p => (
+                  <div key={p.id} style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{p.naam}</div>
+                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{p.datum || "geen datum"} · Opgeslagen: {p.opgeslagenOp}</div>
+                    </div>
+                    <button onClick={() => laadProject(p)} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Openen</button>
+                    <button onClick={() => verwijderProject(p.id)} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
