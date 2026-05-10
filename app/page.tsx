@@ -99,7 +99,7 @@ function WerkbonScanner({ onResult }: { onResult: (data: any) => void }) {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail ? `${data.error} — ${data.detail}` : (data.error ?? "Onbekende fout"));
+      if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
       onResult(data);
       setMelding("✅ Gegevens ingevuld! Controleer en pas aan waar nodig.");
     } catch (err: any) {

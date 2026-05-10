@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-sonnet-4-6",
       max_tokens: 1000,
       messages: [{
         role: "user",
@@ -42,7 +42,9 @@ Als een veld niet gevonden wordt, gebruik dan een lege string.`,
 
   if (!res.ok) {
     const body = await res.text();
-    return Response.json({ error: `Anthropic API fout: ${res.status}`, detail: body }, { status: res.status });
+    let detail = body;
+    try { detail = JSON.parse(body)?.error?.message ?? body; } catch {}
+    return Response.json({ error: `API fout ${res.status}: ${detail}` }, { status: res.status });
   }
 
   const data = await res.json();
