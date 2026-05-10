@@ -277,41 +277,37 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "0 20px", display: "flex", alignItems: "stretch", boxShadow: "0 4px 24px rgba(0,0,0,0.2)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px 16px 4px", borderRight: "1px solid rgba(255,255,255,0.07)", marginRight: 20 }}>
-          <img src={LOGO} alt="VanWinden Techniek" style={{ height: 48, width: 48, objectFit: "contain", mixBlendMode: "screen" as const }} />
-          <div>
-            <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, letterSpacing: "-0.02em" }}>VanWinden Techniek</div>
-            <div style={{ color: "#475569", fontSize: 11 }}>Brandmeld & Gasdetectie</div>
+      <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", boxShadow: "0 4px 24px rgba(0,0,0,0.2)" }}>
+        {/* Bovenste rij: logo + knoppen */}
+        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <img src={LOGO} alt="VanWinden Techniek" style={{ height: 36, width: 36, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 14, letterSpacing: "-0.02em", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
+            {info.opdrachtgever && (
+              <div style={{ color: "#475569", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{info.opdrachtgever} · {info.datum || "—"}</div>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <button onClick={handmatigOpslaan} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+              💾 Opslaan
+            </button>
+            {opslaanMelding && <span style={{ color: "#10b981", fontSize: 12, fontWeight: 600 }}>{opslaanMelding}</span>}
+            <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
+            <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
           </div>
         </div>
-        {info.opdrachtgever && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} />
-            <div>
-              <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 14 }}>{info.opdrachtgever}</div>
-              <div style={{ color: "#475569", fontSize: 11 }}>{info.datum || "—"} · {info.monteur || "monteur"}</div>
-            </div>
-          </div>
-        )}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px" }}>
-          <button onClick={handmatigOpslaan} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-            💾 Opslaan
-          </button>
-          {opslaanMelding && <span style={{ color: "#10b981", fontSize: 12, fontWeight: 600 }}>{opslaanMelding}</span>}
-          <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontSize: 12 }}>🖨️ PDF</button>
-          <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontSize: 12 }}>+ Nieuw</button>
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "flex-end", overflowX: "auto" }}>
+        {/* Onderste rij: tabs op volledige breedte */}
+        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as const }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              padding: "18px 16px 14px", border: "none", background: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: tab === t.id ? 700 : 400,
+              flex: 1, minWidth: 0, padding: "14px 8px 12px", border: "none", background: "none", cursor: "pointer",
+              fontSize: 12, fontWeight: tab === t.id ? 700 : 400,
               color: tab === t.id ? "#fff" : "#64748b",
               borderBottom: tab === t.id ? `3px solid ${t.color}` : "3px solid transparent",
-              whiteSpace: "nowrap" as const, display: "flex", alignItems: "center", gap: 6,
+              display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3,
             }}>
-              <span>{t.icon}</span><span>{t.label}</span>
+              <span style={{ fontSize: 18 }}>{t.icon}</span>
+              <span style={{ whiteSpace: "nowrap" as const }}>{t.label}</span>
             </button>
           ))}
         </div>
