@@ -336,7 +336,7 @@ const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnu
 const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", checklistItems: defaultBrandmeldChecklist };
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
-const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SDV1", stroom: "" }] };
+const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
 const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ opmerking: "", storing: "", automelder: "", handmelder: "" }));
 
 export default function App() {
@@ -979,7 +979,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>Stuwdrukventilatoren</div>
                   {ventStroom.stuwdruk.length < 25 && (
-                    <button onClick={() => setVentStroom({...ventStroom, stuwdruk: [...ventStroom.stuwdruk, { naam: `SDV${ventStroom.stuwdruk.length+1}`, stroom: "" }]})}
+                    <button onClick={() => setVentStroom({...ventStroom, stuwdruk: [...ventStroom.stuwdruk, { naam: `SV${ventStroom.stuwdruk.length+1}`, stroom: "" }]})}
                       style={{ background: "#f0f9ff", color: "#0369a1", border: "1.5px solid #bae6fd", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
                       + Toevoegen
                     </button>
