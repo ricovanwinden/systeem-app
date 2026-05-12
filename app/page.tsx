@@ -23,6 +23,7 @@ interface GasdetectieData {
   centraleType: string; noodstroomType: string; upsvermogen: string; belasting: string; backupUren: string;
   datumGeplaatst: string; serienummer: string; ruststroom: string; alarmstroom: string;
   bouwjaarAccu: string; huidigCapaciteit: string;
+  geluidsdrukAchtergrond: string; geluidsdrukAlarmZonder: string; geluidsdrukAlarmMet: string;
   checklistItems: { vraag: string; status: string; opmerking: string; type?: string; eenheid?: string; waarde?: string; linked?: string }[];
 }
 interface VentilatieRij {
@@ -132,8 +133,8 @@ const defaultGasChecklist = [
   { vraag: "41. Optische signaalgevers: Functioneren alle tekstborden en flitslichten?", type: "vraag" },
   { vraag: "42. Akoestische signaalgevers: Functioneren alle slowwhoops van de CO LPG installatie?", type: "vraag" },
   { vraag: "43. Akoestische signaalgevers: Functioneert de aansturing van de ontruiming (extern via BMI)?", type: "vraag" },
-  { vraag: "44. Akoestische signaalgevers: Geluidsniveau 3e alarm zonder slowwhoops", type: "tekst", eenheid: "dB" },
-  { vraag: "45. Akoestische signaalgevers: Geluidsniveau 3e alarm met slowwhoops", type: "tekst", eenheid: "dB" },
+  { vraag: "44. Akoestische signaalgevers: Geluidsniveau 3e alarm zonder slowwhoops", type: "tekst", eenheid: "dB", linked: "gasDbZonder" },
+  { vraag: "45. Akoestische signaalgevers: Geluidsniveau 3e alarm met slowwhoops", type: "tekst", eenheid: "dB", linked: "gasDbMet" },
 ].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
 function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void }) {
@@ -334,7 +335,7 @@ const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr
 
 const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnummer: "", datum: "", monteur: "", werkzaamheden: "Onderhoud", onderhoudsinterval: "12", storingscontact: "24" };
 const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", checklistItems: defaultBrandmeldChecklist };
-const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
+const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", geluidsdrukAchtergrond: "", geluidsdrukAlarmZonder: "", geluidsdrukAlarmMet: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
 const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ garage: "", opmerking: "", storing: "", automelder: "", handmelder: "" }));
@@ -854,6 +855,24 @@ export default function App() {
                 </>
               )}
             </Card>}
+            <Card icon="🔊" title="Geluidsdrukmetingen">
+              <div style={G2}>
+                <div><label style={L}>Achtergrondgeluid (dB)</label><input style={F} type="number" value={gas.geluidsdrukAchtergrond} onChange={e => setGas({...gas, geluidsdrukAchtergrond: e.target.value})} /></div>
+                <div><label style={L}>Alarm zonder slowwhoops (dB)</label><input style={F} type="number" value={gas.geluidsdrukAlarmZonder} onChange={e => setGas({...gas, geluidsdrukAlarmZonder: e.target.value})} /></div>
+                <div><label style={L}>Alarm met slowwhoops (dB)</label><input style={F} type="number" value={gas.geluidsdrukAlarmMet} onChange={e => setGas({...gas, geluidsdrukAlarmMet: e.target.value})} /></div>
+              </div>
+              {gas.geluidsdrukAchtergrond && (gas.geluidsdrukAlarmZonder || gas.geluidsdrukAlarmMet) && (() => {
+                const achtergrond = parseFloat(gas.geluidsdrukAchtergrond);
+                const vZonder = gas.geluidsdrukAlarmZonder ? parseFloat(gas.geluidsdrukAlarmZonder) - achtergrond : null;
+                const vMet = gas.geluidsdrukAlarmMet ? parseFloat(gas.geluidsdrukAlarmMet) - achtergrond : null;
+                return (
+                  <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" as const }}>
+                    {vZonder !== null && <StatCard label="Verschil zonder slowwhoops" value={vZonder.toFixed(1)+" dB"} color={vZonder >= 5 ? "#10b981" : "#ef4444"} sub={vZonder >= 5 ? "Voldoende" : "Te laag (min. 5 dB)"} />}
+                    {vMet !== null && <StatCard label="Verschil met slowwhoops" value={vMet.toFixed(1)+" dB"} color={vMet >= 5 ? "#10b981" : "#ef4444"} sub={vMet >= 5 ? "Voldoende" : "Te laag (min. 5 dB)"} />}
+                  </div>
+                );
+              })()}
+            </Card>
             <Card icon="✅" title="Checklist">
               {gas.checklistItems.map((item, i) => {
                 if (item.type === "header") return (
@@ -896,6 +915,24 @@ export default function App() {
                     </div>
                   );
                 }
+                if (item.linked === "gasDbZonder") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {gas.geluidsdrukAlarmZonder ? <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{gas.geluidsdrukAlarmZonder} dB</span> : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul meting in</span>}
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← geluidsdruk</span>
+                    </div>
+                  </div>
+                );
+                if (item.linked === "gasDbMet") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {gas.geluidsdrukAlarmMet ? <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{gas.geluidsdrukAlarmMet} dB</span> : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul meting in</span>}
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← geluidsdruk</span>
+                    </div>
+                  </div>
+                );
                 if (item.type === "tekst") return (
                   <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
                     <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
