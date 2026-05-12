@@ -361,6 +361,7 @@ export default function App() {
   const [aantekeningen, setAantekeningen] = useState("");
   const [notitieFotos, setNotitieFotos] = useState<NotitieFoto[]>([]);
   const [fotoLightbox, setFotoLightbox] = useState<NotitieFoto | null>(null);
+  const [actieveTabs, setActieveTabs] = useState<string[]>(["brandmeld", "gasdetectie", "ventilatie", "logboek"]);
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
@@ -425,6 +426,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_scan_preview"); if (s) setWerkbonScanPreview(s);
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_actieve_tabs"); if (s) setActieveTabs(JSON.parse(s));
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
   }, []);
@@ -439,6 +443,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
   useEffect(() => { localStorage.setItem("werkbon_fotos", JSON.stringify(notitieFotos)); }, [notitieFotos]);
   useEffect(() => { if (werkbonScanPreview) localStorage.setItem("werkbon_scan_preview", werkbonScanPreview); else localStorage.removeItem("werkbon_scan_preview"); }, [werkbonScanPreview]);
+  useEffect(() => { localStorage.setItem("werkbon_actieve_tabs", JSON.stringify(actieveTabs)); }, [actieveTabs]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -574,7 +579,7 @@ export default function App() {
         </div>
         {/* Onderste rij: tabs op volledige breedte */}
         <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as const }}>
-          {tabs.map(t => (
+          {tabs.filter(t => !["brandmeld","gasdetectie","ventilatie","logboek"].includes(t.id) || actieveTabs.includes(t.id)).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               flex: 1, minWidth: 0, padding: "14px 8px 12px", border: "none", background: "none", cursor: "pointer",
               fontSize: 12, fontWeight: tab === t.id ? 700 : 400,
@@ -609,6 +614,39 @@ export default function App() {
               />
             </Card>
 
+            <Card icon="🛠️" title="Werkzaamheden — welke tabbladen heb je nodig?">
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+                {([
+                  { id: "brandmeld",   label: "Brandmeld",   icon: "🔴", color: "#ef4444" },
+                  { id: "gasdetectie", label: "Gasdetectie", icon: "🟡", color: "#f59e0b" },
+                  { id: "ventilatie",  label: "Ventilatie",  icon: "💨", color: "#06b6d4" },
+                  { id: "logboek",     label: "Beheer BMI",  icon: "📓", color: "#8b5cf6" },
+                ] as const).map(({ id, label, icon, color }) => {
+                  const actief = actieveTabs.includes(id);
+                  return (
+                    <button key={id} onClick={() => {
+                      setActieveTabs(actief ? actieveTabs.filter(x => x !== id) : [...actieveTabs, id]);
+                      if (!actief) setTab(id as Tab);
+                      else if (tab === (id as Tab)) setTab("info");
+                    }} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "12px 20px", borderRadius: 12, cursor: "pointer",
+                      border: `2px solid ${actief ? color : "#e2e8f0"}`,
+                      background: actief ? color : "#f8fafc",
+                      color: actief ? "#fff" : "#64748b",
+                      fontWeight: 700, fontSize: 14, fontFamily: "inherit",
+                      boxShadow: actief ? `0 4px 12px ${color}40` : "none",
+                      transition: "all 0.15s",
+                    }}>
+                      <span style={{ fontSize: 20 }}>{icon}</span>
+                      {label}
+                      {actief && <span style={{ marginLeft: 4, fontSize: 16 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <p style={{ margin: "12px 0 0", fontSize: 12, color: "#94a3b8" }}>Geselecteerde tabbladen verschijnen in de navigatiebalk bovenaan.</p>
+            </Card>
             <Card icon="🏢" title="Opdrachtgever & project">
               <div style={G2}>
                 {([["Opdrachtgever","opdrachtgever","Naam bedrijf","text"],["Projectnaam","projectnaam","Naam van het project","text"],["Projectnummer","projectnummer","bijv. 2025-001","text"],["Datum","datum","","date"],["Monteur","monteur","Jouw naam","text"]] as const).map(([label,key,placeholder,type]) => (
