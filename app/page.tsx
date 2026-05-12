@@ -218,23 +218,26 @@ function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => vo
 }
 
 function StatusPill({ status, onChange }: { status: string; onChange: (s: string) => void }) {
-  const config: Record<string, { bg: string; text: string; border: string }> = {
-    "???": { bg: "#fef3c7", text: "#92400e", border: "#f59e0b" },
-    "Ja":  { bg: "#d1fae5", text: "#065f46", border: "#10b981" },
-    "Nee": { bg: "#fee2e2", text: "#991b1b", border: "#ef4444" },
-    "N.v.t.": { bg: "#f3f4f6", text: "#6b7280", border: "#9ca3af" },
-  };
-  const c = config[status] ?? config["???"];
+  const btns: { label: string; bg: string; text: string; border: string; active: string }[] = [
+    { label: "Ja",    bg: "#f0fdf4", text: "#15803d", border: "#86efac", active: "#16a34a" },
+    { label: "Nee",   bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", active: "#dc2626" },
+    { label: "N.v.t.",bg: "#f8fafc", text: "#64748b", border: "#cbd5e1", active: "#475569" },
+  ];
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <select value={status} onChange={e => onChange(e.target.value)} style={{
-        appearance: "none" as const, background: c.bg, color: c.text,
-        border: `1.5px solid ${c.border}`, borderRadius: 20, padding: "5px 28px 5px 12px",
-        fontWeight: 700, fontSize: 12, cursor: "pointer", outline: "none",
-      }}>
-        {["???","Ja","Nee","N.v.t."].map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-      <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: c.text, fontSize: 9 }}>▼</span>
+    <div style={{ display: "flex", gap: 4 }}>
+      {btns.map(b => {
+        const isActive = status === b.label;
+        return (
+          <button key={b.label} onClick={() => onChange(b.label)} style={{
+            background: isActive ? b.active : b.bg,
+            color: isActive ? "#fff" : b.text,
+            border: `1.5px solid ${isActive ? b.active : b.border}`,
+            borderRadius: 8, padding: "5px 10px",
+            fontWeight: 700, fontSize: 12, cursor: "pointer",
+            transition: "all 0.1s",
+          }}>{b.label}</button>
+        );
+      })}
     </div>
   );
 }
