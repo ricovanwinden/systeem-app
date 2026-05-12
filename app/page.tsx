@@ -121,7 +121,7 @@ const defaultGasChecklist = [
   { vraag: "GASDETECTIE CO/LPG", type: "header" },
   { vraag: "31. Type gasdetectie onderhoud?", type: "tekst", eenheid: "" },
   { vraag: "32. Gasdetectie centrale: Is de regelaar / centrale in bedrijf en storingsvrij?", type: "vraag" },
-  { vraag: "33. Noodvoeding: Hoe is voorzien in de noodstroomvoorziening?", type: "tekst", eenheid: "" },
+  { vraag: "33. Is de noodvoeding oké?", type: "vraag", linked: "noodvoldoet" },
   { vraag: "34. Noodvoeding: Ruststroom", type: "tekst", eenheid: "A", linked: "ruststroom" },
   { vraag: "35. Noodvoeding: Alarmstroom", type: "tekst", eenheid: "A", linked: "alarmstroom" },
   { vraag: "36. Voldoet de capaciteit van de noodstroomvoorziening? (12 uur)", type: "vraag", linked: "noodvoldoet" },
@@ -378,8 +378,10 @@ export default function App() {
       const s = localStorage.getItem("werkbon_gas");
       if (s) {
         const parsed = JSON.parse(s);
-        // Verouderde checklist (voor Syntess vragen) automatisch bijwerken
-        if (!parsed.checklistItems?.some((item: any) => item.vraag?.startsWith("5."))) {
+        // Verouderde checklist automatisch bijwerken
+        const q33 = parsed.checklistItems?.find((item: any) => item.vraag?.startsWith("33."));
+        if (!parsed.checklistItems?.some((item: any) => item.vraag?.startsWith("5.")) ||
+            (q33 && q33.linked !== "noodvoldoet")) {
           parsed.checklistItems = defaultGasChecklist;
         }
         setGas(parsed);
