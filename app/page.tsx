@@ -29,7 +29,7 @@ interface VentilatieRij {
   type: string; naam: string; breedte: string; hoogte: string; diameter: string;
   meting1: string; meting2: string; meting3: string; meting4: string; meting5: string;
 }
-interface LogboekRij { datumUit: string; datumIn: string; aantalMelders: string; opmerking: string; }
+interface LogboekRij { datumUit: string; datumIn: string; aantalMelders: string; opmerking: string; storing: string; automelder: string; handmelder: string; }
 interface VentStroomRij { naam: string; stroom: string; }
 interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; }
 
@@ -337,7 +337,7 @@ const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom:
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SDV1", stroom: "" }] };
-const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ datumUit: "", datumIn: "", aantalMelders: "", opmerking: "" }));
+const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ datumUit: "", datumIn: "", aantalMelders: "", opmerking: "", storing: "", automelder: "", handmelder: "" }));
 
 export default function App() {
   const [mounted, setMounted] = useState(false);
@@ -494,7 +494,7 @@ export default function App() {
     { id: "brandmeld", label: "Brandmeld", icon: "🔴", color: "#ef4444" },
     { id: "gasdetectie", label: "Gasdetectie", icon: "🟡", color: "#f59e0b" },
     { id: "ventilatie", label: "Ventilatie", icon: "💨", color: "#06b6d4" },
-    { id: "logboek", label: "Logboek", icon: "📓", color: "#8b5cf6" },
+    { id: "logboek", label: "Beheer BMI", icon: "📓", color: "#8b5cf6" },
     { id: "aantekeningen", label: "Notities", icon: "✏️", color: "#10b981" },
     { id: "werkbon", label: "Werkbon", icon: "📄", color: "#64748b" },
   ];
@@ -1098,10 +1098,10 @@ export default function App() {
           <div>
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22 }}>
               <div>
-                <h1 style={{ fontSize:24,fontWeight:800,color:"#0f172a",margin:0 }}>Logboek BMI</h1>
+                <h1 style={{ fontSize:24,fontWeight:800,color:"#0f172a",margin:0 }}>Beheer BMI</h1>
                 <p style={{ color:"#64748b",margin:"4px 0 0",fontSize:14 }}>Storings- en meldingsregistratie</p>
               </div>
-              <button onClick={()=>setLogboek([...logboek,{datumUit:"",datumIn:"",aantalMelders:"",opmerking:""}])}
+              <button onClick={()=>setLogboek([...logboek,{datumUit:"",datumIn:"",aantalMelders:"",opmerking:"",storing:"",automelder:"",handmelder:""}])}
                 style={{ background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",color:"#fff",border:"none",borderRadius:12,padding:"10px 18px",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 4px 12px rgba(139,92,246,0.3)" }}>
                 + Rij
               </button>
@@ -1111,7 +1111,7 @@ export default function App() {
                 <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                   <thead>
                     <tr>
-                      {["Datum uit bedrijf","Datum in bedrijf","# Melders","Opmerking",""].map(h=>(
+                      {["Datum uit bedrijf","Datum in bedrijf","# Melders","Storing","Auto melder","Handmelder","Opmerking",""].map(h=>(
                         <th key={h} style={{ padding:"10px 14px",textAlign:"left",background:"#f8fafc",color:"#64748b",fontWeight:700,fontSize:11,letterSpacing:"0.05em",textTransform:"uppercase" as const,borderBottom:"2px solid #e2e8f0" }}>{h}</th>
                       ))}
                     </tr>
@@ -1122,7 +1122,10 @@ export default function App() {
                         <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:155,fontSize:12}} type="datetime-local" value={rij.datumUit} onChange={e=>{const a=[...logboek];a[i]={...a[i],datumUit:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:155,fontSize:12}} type="datetime-local" value={rij.datumIn} onChange={e=>{const a=[...logboek];a[i]={...a[i],datumIn:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><input style={{...F,width:72,fontSize:12}} type="number" value={rij.aantalMelders} onChange={e=>{const a=[...logboek];a[i]={...a[i],aantalMelders:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,fontSize:12}} value={rij.opmerking} onChange={e=>{const a=[...logboek];a[i]={...a[i],opmerking:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:160,fontSize:12}} placeholder="bijv. kortsluiting lus 3" value={rij.storing||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],storing:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. RA-01" value={rij.automelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],automelder:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. HBM-05" value={rij.handmelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],handmelder:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:160,fontSize:12}} value={rij.opmerking} onChange={e=>{const a=[...logboek];a[i]={...a[i],opmerking:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><button onClick={()=>setLogboek(logboek.filter((_,j)=>j!==i))} style={{ background:"#fef2f2",color:"#991b1b",border:"1.5px solid #fca5a5",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12,fontWeight:700 }}>✕</button></td>
                       </tr>
                     ))}
