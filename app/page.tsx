@@ -354,6 +354,7 @@ export default function App() {
   const [ventStroom, setVentStroom] = useState<VentStroomData>(defaultVentStroom);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
+  const [beheerGarage, setBeheerGarage] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
@@ -409,6 +410,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_beheergarage"); if (s) setBeheerGarage(s);
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
   }, []);
@@ -421,6 +425,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
+  useEffect(() => { localStorage.setItem("werkbon_beheergarage", beheerGarage); }, [beheerGarage]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -481,6 +486,7 @@ export default function App() {
     setVentStroom(defaultVentStroom);
     setLogboek(defaultLogboek);
     setAantekeningen("");
+    setBeheerGarage("");
     setWerkbonExtra([]);
     setWerkbonDoormel([]);
     setScannerKey(k => k + 1);
@@ -1129,6 +1135,12 @@ export default function App() {
                 + Rij
               </button>
             </div>
+            <Card icon="🏢" title="Locatie">
+              <div>
+                <label style={L}>Welke garage</label>
+                <input style={F} placeholder="bijv. Garage Noord, sectie B" value={beheerGarage} onChange={e => setBeheerGarage(e.target.value)} />
+              </div>
+            </Card>
             <Card>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
