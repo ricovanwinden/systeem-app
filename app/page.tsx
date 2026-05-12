@@ -266,20 +266,20 @@ function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data:
 }
 
 // ── VanWinden huisstijl ──────────────────────────────────────────
-const VW_CYAN   = "#00d4d4";   // cyaan accent (logo / knoppen)
-const VW_CYAN_D = "#00aaaa";   // donkerder cyaan (hover/active)
-const VW_BG     = "#16161e";   // pagina achtergrond
-const VW_SURF   = "#1e1e2a";   // kaart achtergrond
-const VW_SURF2  = "#252535";   // iets lichter oppervlak
-const VW_BORDER = "#2e2e42";   // randen
-const VW_TEXT   = "#f1f5f9";   // primaire tekst
-const VW_MUTED  = "#8892a4";   // subtekst
+const VW_CYAN   = "#0099a8";   // cyaan accent (logo / knoppen)
+const VW_CYAN_D = "#007a87";   // donkerder cyaan
+const VW_BG     = "#f3f4f6";   // pagina achtergrond
+const VW_SURF   = "#ffffff";   // kaart achtergrond
+const VW_SURF2  = "#f8f9fb";   // invoerveld achtergrond
+const VW_BORDER = "#e2e6ec";   // randen
+const VW_TEXT   = "#111827";   // primaire tekst
+const VW_MUTED  = "#6b7280";   // subtekst
 
 function StatusPill({ status, onChange }: { status: string; onChange: (s: string) => void }) {
   const btns = [
-    { label: "Ja",     activeBg: "#065f46", activeText: "#6ee7b7", activeBorder: "#10b981" },
-    { label: "Nee",    activeBg: "#7f1d1d", activeText: "#fca5a5", activeBorder: "#ef4444" },
-    { label: "N.v.t.", activeBg: "#1e293b", activeText: "#94a3b8", activeBorder: "#475569" },
+    { label: "Ja",     activeBg: "#16a34a", activeText: "#fff", activeBorder: "#16a34a" },
+    { label: "Nee",    activeBg: "#dc2626", activeText: "#fff", activeBorder: "#dc2626" },
+    { label: "N.v.t.", activeBg: "#4b5563", activeText: "#fff", activeBorder: "#4b5563" },
   ];
   return (
     <div style={{ display: "flex", gap: 4 }}>
@@ -304,21 +304,21 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
   const isBad  = color === "#ef4444" || color === "#dc2626";
   return (
     <div style={{
-      background: VW_SURF2, borderRadius: 10, padding: "15px 18px", flex: 1, minWidth: 130,
-      border: `1px solid ${isGood ? "#065f46" : isBad ? "#7f1d1d" : VW_BORDER}`,
+      background: isGood ? "#f0fdf4" : isBad ? "#fef2f2" : VW_SURF2, borderRadius: 10, padding: "15px 18px", flex: 1, minWidth: 130,
+      border: `1px solid ${isGood ? "#bbf7d0" : isBad ? "#fecaca" : VW_BORDER}`,
     }}>
       <div style={{ fontSize: 10, color: VW_MUTED, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 7 }}>{label}</div>
-      <div style={{ fontSize: 23, fontWeight: 700, color: isGood ? "#6ee7b7" : isBad ? "#fca5a5" : VW_CYAN, lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: isGood ? "#6ee7b7" : isBad ? "#fca5a5" : VW_MUTED, marginTop: 5, fontWeight: 600 }}>{sub}</div>}
+      <div style={{ fontSize: 23, fontWeight: 700, color: isGood ? "#16a34a" : isBad ? "#dc2626" : VW_CYAN, lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: isGood ? "#16a34a" : isBad ? "#dc2626" : VW_MUTED, marginTop: 5, fontWeight: 600 }}>{sub}</div>}
     </div>
   );
 }
 
 function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: string }) {
   const cfg = {
-    success: { bg: "#064e3b", border: "#065f46", accent: "#10b981", label: "OK",      color: "#6ee7b7" },
-    warning: { bg: "#451a03", border: "#78350f", accent: "#f59e0b", label: "Let op",  color: "#fcd34d" },
-    danger:  { bg: "#450a0a", border: "#7f1d1d", accent: "#ef4444", label: "Actie",   color: "#fca5a5" },
+    success: { bg: "#f0fdf4", border: "#bbf7d0", accent: "#16a34a", label: "OK",      color: "#166534" },
+    warning: { bg: "#fffbeb", border: "#fde68a", accent: "#d97706", label: "Let op",  color: "#78350f" },
+    danger:  { bg: "#fef2f2", border: "#fecaca", accent: "#dc2626", label: "Actie",   color: "#991b1b" },
   }[type];
   return (
     <div style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.accent}`, border: `1px solid ${cfg.border}`, borderRadius: 8, padding: "11px 16px", color: cfg.color, fontWeight: 600, fontSize: 13, marginTop: 14, display: "flex", alignItems: "center", gap: 10 }}>
