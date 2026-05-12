@@ -20,7 +20,7 @@ interface BrandmeldData {
   checklistItems: { vraag: string; status: string; opmerking: string }[];
 }
 interface GasdetectieData {
-  centraleType: string; noodstroomType: string; upsvermogen: string;
+  centraleType: string; noodstroomType: string; upsvermogen: string; belasting: string; backupUren: string;
   datumGeplaatst: string; serienummer: string; ruststroom: string; alarmstroom: string;
   bouwjaarAccu: string; huidigCapaciteit: string;
   checklistItems: { vraag: string; status: string; opmerking: string }[];
@@ -43,6 +43,17 @@ const defaultBrandmeldChecklist = [
   "Reset sleutel HBM aanwezig?", "Handleiding aanwezig?",
   "Weerstand van de lus gemeten?", "Systeem in rust achtergelaten?",
   "Logboek bijgewerkt?", "Revisietekeningen aanwezig?",
+].map(v => ({ vraag: v, status: "???", opmerking: "" }));
+
+const defaultVentChecklist = [
+  "Ventilatoren gecontroleerd op geluiden/trillingen?",
+  "Filters gecontroleerd/vervangen?",
+  "Debiet gemeten en gedocumenteerd?",
+  "Brandkleppen gecontroleerd?",
+  "Aandrijfriemen gecontroleerd?",
+  "Lagers gesmeerd?",
+  "Regeling gecontroleerd?",
+  "Systeem in rust achtergelaten?",
 ].map(v => ({ vraag: v, status: "???", opmerking: "" }));
 
 const defaultGasChecklist = [
@@ -248,7 +259,7 @@ const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr
 
 const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnummer: "", datum: "", monteur: "", werkzaamheden: "Onderhoud", onderhoudsinterval: "12", storingscontact: "24" };
 const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", checklistItems: defaultBrandmeldChecklist };
-const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
+const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ datumUit: "", datumIn: "", aantalMelders: "", opmerking: "" }));
 
@@ -263,6 +274,7 @@ export default function App() {
   const [bm, setBm] = useState<BrandmeldData>(defaultBm);
   const [gas, setGas] = useState<GasdetectieData>(defaultGas);
   const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(defaultVentRijen);
+  const [ventChecklist, setVentChecklist] = useState<{vraag:string;status:string;opmerking:string}[]>(defaultVentChecklist);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
@@ -285,6 +297,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_vent"); if (s) setVentRijen(JSON.parse(s));
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_ventcl"); if (s) setVentChecklist(JSON.parse(s));
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_logboek"); if (s) setLogboek(JSON.parse(s));
     } catch {}
     try {
@@ -299,6 +314,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_bm", JSON.stringify(bm)); }, [bm]);
   useEffect(() => { localStorage.setItem("werkbon_gas", JSON.stringify(gas)); }, [gas]);
   useEffect(() => { localStorage.setItem("werkbon_vent", JSON.stringify(ventRijen)); }, [ventRijen]);
+  useEffect(() => { localStorage.setItem("werkbon_ventcl", JSON.stringify(ventChecklist)); }, [ventChecklist]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
 
@@ -357,6 +373,7 @@ export default function App() {
     setBm(defaultBm);
     setGas(defaultGas);
     setVentRijen(defaultVentRijen);
+    setVentChecklist(defaultVentChecklist);
     setLogboek(defaultLogboek);
     setAantekeningen("");
     setWerkbonExtra([]);
@@ -371,12 +388,19 @@ export default function App() {
   const bmTeOud = bmLeeftijd !== null && bmLeeftijd >= 4;
   const bmVoldoende = bmBenodigd !== null && bmHuidig !== null ? bmHuidig >= bmBenodigd : null;
 
-  const gasVermogen = parseFloat(gas.upsvermogen) || 0;
+  const isUPS = gas.noodstroomType === "UPS";
   const gasLeeftijd = gas.bouwjaarAccu ? new Date().getFullYear() - parseInt(gas.bouwjaarAccu) : null;
   const gasTeOud = gasLeeftijd !== null && gasLeeftijd >= 4;
-  const gasBenodigd = gasVermogen ? ((gasVermogen / 24) * 12) * 1.25 / 1000 : null;
+  // UPS: bereken in VA — benodigd = belasting * 1.25, aanwezig = UPS vermogen
+  const gasUPSBelasting = parseFloat(gas.belasting) || null;
+  const gasUPSVermogen = parseFloat(gas.upsvermogen) || null;
+  const gasUPSBenodigd = gasUPSBelasting ? Math.ceil(gasUPSBelasting * 1.25) : null;
+  const gasUPSVoldoende = gasUPSBenodigd !== null && gasUPSVermogen !== null ? gasUPSVermogen >= gasUPSBenodigd : null;
+  // Accu: bereken in Ah — benodigd via ruststroom + alarmstroom
+  const gasRust = parseFloat(gas.ruststroom), gasAlarm = parseFloat(gas.alarmstroom), gasUren = parseFloat(gas.backupUren) || 12;
+  const gasAccuBenodigd = gasRust && gasAlarm ? berekenAccuBrandmeld(gasRust, gasAlarm, gasUren) : null;
   const gasHuidig = parseFloat(gas.huidigCapaciteit) || null;
-  const gasVoldoende = gasBenodigd !== null && gasHuidig !== null ? gasHuidig >= gasBenodigd : null;
+  const gasAccuVoldoende = gasAccuBenodigd !== null && gasHuidig !== null ? gasHuidig >= gasAccuBenodigd : null;
 
   const tabs: { id: Tab; label: string; icon: string; color: string }[] = [
     { id: "info", label: "Project", icon: "📋", color: "#6366f1" },
@@ -576,28 +600,54 @@ export default function App() {
                 <div><label style={L}>Datum geplaatst</label><input style={F} type="date" value={gas.datumGeplaatst} onChange={e => setGas({...gas, datumGeplaatst: e.target.value})} /></div>
               </div>
             </Card>
-            <Card icon="🔋" title="UPS / Accu berekening">
-              <div style={G2}>
-                <div><label style={L}>UPS vermogen (VA)</label>
-                  <select style={F} value={gas.upsvermogen} onChange={e => setGas({...gas, upsvermogen: e.target.value})}>
-                    {["600","800","1000","1500","2000","3000"].map(o => <option key={o} value={o}>{o} VA</option>)}
-                  </select>
-                </div>
-                <div><label style={L}>Ruststroom (mA)</label><input style={F} type="number" value={gas.ruststroom} onChange={e => setGas({...gas, ruststroom: e.target.value})} /></div>
-                <div><label style={L}>Alarmstroom (mA)</label><input style={F} type="number" value={gas.alarmstroom} onChange={e => setGas({...gas, alarmstroom: e.target.value})} /></div>
-                <div><label style={L}>Bouwjaar accu</label><input style={F} type="number" placeholder="bijv. 2021" value={gas.bouwjaarAccu} onChange={e => setGas({...gas, bouwjaarAccu: e.target.value})} /></div>
-                <div><label style={L}>Huidige capaciteit (Ah)</label><input style={F} type="number" value={gas.huidigCapaciteit} onChange={e => setGas({...gas, huidigCapaciteit: e.target.value})} /></div>
-              </div>
-              {gasBenodigd !== null && (
-                <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
-                  <StatCard label="Benodigd" value={gasBenodigd.toFixed(1)+" Ah"} sub="incl. 25% marge" />
-                  {gasHuidig && <StatCard label="Aanwezig" value={gasHuidig+" Ah"} color={gasVoldoende?"#10b981":"#ef4444"} sub={gasVoldoende?"Voldoende ✓":"Onvoldoende ✗"} />}
-                  {gasLeeftijd !== null && <StatCard label="Leeftijd accu" value={gasLeeftijd+" jaar"} color={gasTeOud?"#ef4444":"#10b981"} sub={gasTeOud?"Vervangen!":"Goedgekeurd ✓"} />}
-                </div>
+            <Card icon="🔋" title={isUPS ? "UPS berekening (VA)" : "Accu berekening (Ah)"}>
+              {isUPS ? (
+                <>
+                  <div style={G2}>
+                    <div><label style={L}>Aansluitvermogen / belasting (VA)</label><input style={F} type="number" placeholder="bijv. 800" value={gas.belasting} onChange={e => setGas({...gas, belasting: e.target.value})} /></div>
+                    <div><label style={L}>UPS vermogen (VA)</label>
+                      <select style={F} value={gas.upsvermogen} onChange={e => setGas({...gas, upsvermogen: e.target.value})}>
+                        {["600","800","1000","1500","2000","3000"].map(o => <option key={o} value={o}>{o} VA</option>)}
+                      </select>
+                    </div>
+                    <div><label style={L}>Bouwjaar accu</label><input style={F} type="number" placeholder="bijv. 2021" value={gas.bouwjaarAccu} onChange={e => setGas({...gas, bouwjaarAccu: e.target.value})} /></div>
+                  </div>
+                  {gasUPSBenodigd !== null && (
+                    <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" as const }}>
+                      <StatCard label="Benodigd" value={gasUPSBenodigd+" VA"} sub="incl. 25% veiligheidsmarge" />
+                      {gasUPSVermogen && <StatCard label="UPS aanwezig" value={gasUPSVermogen+" VA"} color={gasUPSVoldoende?"#10b981":"#ef4444"} sub={gasUPSVoldoende?"Voldoende ✓":"Te klein ✗"} />}
+                      {gasLeeftijd !== null && <StatCard label="Leeftijd accu" value={gasLeeftijd+" jaar"} color={gasTeOud?"#ef4444":"#10b981"} sub={gasTeOud?"Vervangen!":"Goedgekeurd ✓"} />}
+                    </div>
+                  )}
+                  {gasTeOud && <Alert type="danger" text="Accu afgekeurd — ouder dan 4 jaar." />}
+                  {gasUPSVoldoende===false && <Alert type="warning" text="UPS te klein — grotere UPS vereist." />}
+                  {gasUPSVoldoende===true && !gasTeOud && <Alert type="success" text="UPS voldoende." />}
+                </>
+              ) : (
+                <>
+                  <div style={G2}>
+                    <div><label style={L}>Ruststroom (mA)</label><input style={F} type="number" value={gas.ruststroom} onChange={e => setGas({...gas, ruststroom: e.target.value})} /></div>
+                    <div><label style={L}>Alarmstroom (mA)</label><input style={F} type="number" value={gas.alarmstroom} onChange={e => setGas({...gas, alarmstroom: e.target.value})} /></div>
+                    <div><label style={L}>Backup uren</label>
+                      <select style={F} value={gas.backupUren} onChange={e => setGas({...gas, backupUren: e.target.value})}>
+                        {["4","8","12","24","48","72"].map(o => <option key={o} value={o}>{o} uur</option>)}
+                      </select>
+                    </div>
+                    <div><label style={L}>Bouwjaar accu</label><input style={F} type="number" placeholder="bijv. 2021" value={gas.bouwjaarAccu} onChange={e => setGas({...gas, bouwjaarAccu: e.target.value})} /></div>
+                    <div><label style={L}>Huidige capaciteit (Ah)</label><input style={F} type="number" value={gas.huidigCapaciteit} onChange={e => setGas({...gas, huidigCapaciteit: e.target.value})} /></div>
+                  </div>
+                  {gasAccuBenodigd !== null && (
+                    <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" as const }}>
+                      <StatCard label="Benodigd" value={gasAccuBenodigd.toFixed(1)+" Ah"} sub="incl. 25% marge" />
+                      {gasHuidig && <StatCard label="Aanwezig" value={gasHuidig+" Ah"} color={gasAccuVoldoende?"#10b981":"#ef4444"} sub={gasAccuVoldoende?"Voldoende ✓":"Onvoldoende ✗"} />}
+                      {gasLeeftijd !== null && <StatCard label="Leeftijd accu" value={gasLeeftijd+" jaar"} color={gasTeOud?"#ef4444":"#10b981"} sub={gasTeOud?"Vervangen!":"Goedgekeurd ✓"} />}
+                    </div>
+                  )}
+                  {gasTeOud && <Alert type="danger" text="Accu afgekeurd — ouder dan 4 jaar." />}
+                  {gasAccuVoldoende===false && !gasTeOud && <Alert type="warning" text="Capaciteit onvoldoende — grotere accu vereist." />}
+                  {gasAccuVoldoende===true && !gasTeOud && <Alert type="success" text="Accu goedgekeurd." />}
+                </>
               )}
-              {gasTeOud && <Alert type="danger" text="Accu afgekeurd — ouder dan 4 jaar." />}
-              {gasVoldoende===false && !gasTeOud && <Alert type="warning" text="Capaciteit onvoldoende — grotere accu vereist." />}
-              {gasVoldoende===true && !gasTeOud && <Alert type="success" text="Accu goedgekeurd." />}
             </Card>
             <Card icon="✅" title="Checklist">
               {gas.checklistItems.map((item, i) => (
@@ -659,6 +709,15 @@ export default function App() {
                 </Card>
               );
             })}
+            <Card icon="✅" title="Checklist ventilatie">
+              {ventChecklist.map((item, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 14px", borderRadius: 10, background: i%2===0?"#f8fafc":"#fff", border: "1px solid #f1f5f9", marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                  <StatusPill status={item.status} onChange={s => { const a=[...ventChecklist]; a[i]={...a[i],status:s}; setVentChecklist(a); }} />
+                  <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],opmerking:e.target.value}; setVentChecklist(a); }} />
+                </div>
+              ))}
+            </Card>
           </div>
         )}
 
