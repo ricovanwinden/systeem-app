@@ -365,16 +365,39 @@ export default function App() {
       const s = localStorage.getItem("werkbon_info"); if (s) setInfo(JSON.parse(s));
     } catch {}
     try {
-      const s = localStorage.getItem("werkbon_bm"); if (s) setBm(JSON.parse(s));
+      const s = localStorage.getItem("werkbon_bm");
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (!parsed.checklistItems?.some((item: any) => item.vraag?.startsWith("8."))) {
+          parsed.checklistItems = defaultBrandmeldChecklist;
+        }
+        setBm(parsed);
+      }
     } catch {}
     try {
-      const s = localStorage.getItem("werkbon_gas"); if (s) setGas(JSON.parse(s));
+      const s = localStorage.getItem("werkbon_gas");
+      if (s) {
+        const parsed = JSON.parse(s);
+        // Verouderde checklist (voor Syntess vragen) automatisch bijwerken
+        if (!parsed.checklistItems?.some((item: any) => item.vraag?.startsWith("5."))) {
+          parsed.checklistItems = defaultGasChecklist;
+        }
+        setGas(parsed);
+      }
     } catch {}
     try {
       const s = localStorage.getItem("werkbon_vent"); if (s) setVentRijen(JSON.parse(s));
     } catch {}
     try {
-      const s = localStorage.getItem("werkbon_ventcl"); if (s) setVentChecklist(JSON.parse(s));
+      const s = localStorage.getItem("werkbon_ventcl");
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (!parsed.some((item: any) => item.vraag?.startsWith("10."))) {
+          setVentChecklist(defaultVentChecklist);
+        } else {
+          setVentChecklist(parsed);
+        }
+      }
     } catch {}
     try {
       const s = localStorage.getItem("werkbon_ventstroom"); if (s) setVentStroom(JSON.parse(s));
