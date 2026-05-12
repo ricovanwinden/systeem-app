@@ -348,6 +348,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("info");
   const [opslaanMelding, setOpslaanMelding] = useState("");
   const [kopieermeldingCode, setKopieermeldingCode] = useState("");
+  const [toonCodes, setToonCodes] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -574,6 +575,7 @@ export default function App() {
             </button>
             <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
             <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
+            <button onClick={() => setToonCodes(v => !v)} title="Standaard installateurscodes" style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 16 }}>🔑</button>
             <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
           </div>
         </div>
@@ -1427,6 +1429,44 @@ export default function App() {
         )}
 
       </div>
+
+      {/* CODES PANEEL */}
+      {toonCodes && (
+        <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => setToonCodes(false)}>
+          <div style={{ background: "#fff", width: "100%", maxHeight: "80vh", borderRadius: "20px 20px 0 0", padding: 24, overflowY: "auto" as const }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#0f172a" }}>🔑 Installateurscodes</h2>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>Tik op een code om te kopiëren</p>
+              </div>
+              <button onClick={() => setToonCodes(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Sluiten</button>
+            </div>
+            {kopieermeldingCode && (
+              <div style={{ marginBottom: 12, padding: "8px 14px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#166534" }}>
+                ✅ {kopieermeldingCode} gekopieerd
+              </div>
+            )}
+            {[
+              { merk: "Penta",              code: "7654" },
+              { merk: "Opperman",           code: "22767" },
+              { merk: "Opperman TGU KM3.6", code: "022767" },
+              { merk: "Opperman GWA",       code: "022767" },
+              { merk: "Siemens",            code: "3333" },
+              { merk: "Johnson",            code: "3333" },
+              { merk: "Honeywell",          code: "3333 / 9898" },
+            ].map(({ merk, code }) => (
+              <button key={merk+code} onClick={() => {
+                navigator.clipboard.writeText(code).catch(() => {});
+                setKopieermeldingCode(merk + " " + code);
+                setTimeout(() => setKopieermeldingCode(""), 2000);
+              }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", textAlign: "left", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "14px 18px", marginBottom: 8, cursor: "pointer", fontFamily: "inherit" }}>
+                <span style={{ fontSize: 15, color: "#374151", fontWeight: 600 }}>{merk}</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "#6366f1", fontFamily: "monospace", letterSpacing: "0.05em" }}>{code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* PROJECTEN PANEEL */}
       {toonProjecten && (
