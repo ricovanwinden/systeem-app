@@ -23,7 +23,7 @@ interface GasdetectieData {
   centraleType: string; noodstroomType: string; upsvermogen: string; belasting: string; backupUren: string;
   datumGeplaatst: string; serienummer: string; ruststroom: string; alarmstroom: string;
   bouwjaarAccu: string; huidigCapaciteit: string;
-  checklistItems: { vraag: string; status: string; opmerking: string }[];
+  checklistItems: { vraag: string; status: string; opmerking: string; type?: string; eenheid?: string; waarde?: string; linked?: string }[];
 }
 interface VentilatieRij {
   type: string; naam: string; breedte: string; hoogte: string; diameter: string;
@@ -46,23 +46,49 @@ const defaultBrandmeldChecklist = [
 ].map(v => ({ vraag: v, status: "???", opmerking: "" }));
 
 const defaultVentChecklist = [
-  "Ventilatoren gecontroleerd op geluiden/trillingen?",
-  "Filters gecontroleerd/vervangen?",
-  "Debiet gemeten en gedocumenteerd?",
-  "Brandkleppen gecontroleerd?",
-  "Aandrijfriemen gecontroleerd?",
-  "Lagers gesmeerd?",
-  "Regeling gecontroleerd?",
-  "Systeem in rust achtergelaten?",
-].map(v => ({ vraag: v, status: "???", opmerking: "" }));
+  { vraag: "ONDERHOUD VENT", type: "header" },
+  { vraag: "10. Beheer: Is het dossier aanwezig en volledig (Matrix / Ontwerp)?", type: "vraag" },
+  { vraag: "11. Beheer: Komt het type fabricaat / installatie overeen met de uitgangspunten in Syntess?", type: "vraag" },
+  { vraag: "12. Bekabeling: Zijn de kabels onbeschadigd en zijn de aansluitingen nog in orde?", type: "vraag" },
+  { vraag: "13. Regelkast: Is de RK functioneel, in normaal bedrijf en storingsvrij?", type: "vraag" },
+  { vraag: "14. Regelkast: Indien gestuurd op windrichting, werkt de windvaan correct?", type: "vraag" },
+  { vraag: "15. Motorkleppen: Zijn de kleppenregisters onbeschadigd en functioneel?", type: "vraag" },
+  { vraag: "16. Dakkleppen / dakventilatoren: Zijn de units onbeschadigd, functioneel en deugelijk bevestigd?", type: "vraag" },
+  { vraag: "17. Ventilatoren: Zijn de af- en toeventilatoren functioneel?", type: "vraag" },
+  { vraag: "18. Ventilatoren: Noteer het totaal debiet van de toe- en afvoerventilatoren.", type: "tekst", eenheid: "m³/h" },
+  { vraag: "19. Ventilatoren: Noteer de stroomafname van de toe- en afvoerventilatoren in vol bedrijf.", type: "tekst", eenheid: "A" },
+  { vraag: "20. Ventilatoren: Controleer of er een onderhoudssticker aanwezig is en vink deze af.", type: "vraag" },
+  { vraag: "21. Stuwdruk ventilatoren: Zijn de stuwdruk ventilatoren functioneel?", type: "vraag" },
+  { vraag: "22. Stuwdruk ventilatoren: Zijn de werkschakelaars geblokkeerd en vergrendeld? Zijn er geen obstakels aanwezig?", type: "vraag" },
+  { vraag: "23. Ventilatoren: Reinig alle ventilatoren en roosters. Smeer conform opgave fabrikant.", type: "vraag" },
+  { vraag: "24. Werking ventilatiesysteem: Noteer de opgenomen stroom in 'dag' bedrijf.", type: "tekst", eenheid: "A" },
+  { vraag: "25. Werking ventilatiesysteem: Noteer de opgenomen stroom in vollast.", type: "tekst", eenheid: "A" },
+  { vraag: "STURINGEN FUNCTIONEEL BEPROEVEN", type: "header" },
+  { vraag: "27. Sturingen Gasdetectie: worden de ventilatoren juist aangestuurd (draairichting en locatie) conform FM?", type: "vraag" },
+  { vraag: "28. Sturingen BMI: worden de ventilatoren juist aangestuurd (draairichting en locatie) conform FM?", type: "vraag" },
+  { vraag: "29. Is er een werkschakelaar aanwezig t.b.v. het afschakelen van de frequentieregelaar?", type: "vraag" },
+].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
 const defaultGasChecklist = [
-  "Storingsdoormelding aanwezig?", "Centrale in bedrijf en intact?",
-  "Tijdinstelling correct?", "Dag- en nachtstand correct?",
-  "Alle sensoren op auto-bedrijf?", "Geen offset ingesteld?",
-  "UPS in bedrijf?", "Sensoren gekalibreerd?",
-  "Signaalgevers functioneel?", "Datum onderhoud in logboek?",
-].map(v => ({ vraag: v, status: "???", opmerking: "" }));
+  { vraag: "5. Doormelding 'storing regelkast / CO LPG' afgemeld?", type: "vraag" },
+  { vraag: "8. Doormelding '3e fase gasalarm' afgemeld?", type: "vraag" },
+  { vraag: "GASDETECTIE CO/LPG", type: "header" },
+  { vraag: "31. Type gasdetectie onderhoud?", type: "tekst", eenheid: "" },
+  { vraag: "32. Gasdetectie centrale: Is de regelaar / centrale in bedrijf en storingsvrij?", type: "vraag" },
+  { vraag: "33. Noodvoeding: Hoe is voorzien in de noodstroomvoorziening?", type: "tekst", eenheid: "" },
+  { vraag: "34. Noodvoeding: Ruststroom", type: "tekst", eenheid: "A", linked: "ruststroom" },
+  { vraag: "35. Noodvoeding: Alarmstroom", type: "tekst", eenheid: "A", linked: "alarmstroom" },
+  { vraag: "36. Voldoet de capaciteit van de noodstroomvoorziening? (12 uur)", type: "vraag", linked: "noodvoldoet" },
+  { vraag: "37. Sensoren: Aantal CO en/of LPG sensoren gekalibreerd / gecontroleerd", type: "tekst", eenheid: "st" },
+  { vraag: "38. Sensoren: Wordt bij een gasmelding (CO) de ventilatie-installatie correct geactiveerd?", type: "vraag" },
+  { vraag: "39. Sensoren: Wordt bij een gasmelding (LPG) de ventilatie-installatie correct geactiveerd?", type: "vraag" },
+  { vraag: "40. Sensoren: Reinig of kalibreer alle CO en/of LPG sensoren en vink onderhoudssticker af.", type: "vraag" },
+  { vraag: "41. Optische signaalgevers: Functioneren alle tekstborden en flitslichten?", type: "vraag" },
+  { vraag: "42. Akoestische signaalgevers: Functioneren alle slowwhoops van de CO LPG installatie?", type: "vraag" },
+  { vraag: "43. Akoestische signaalgevers: Functioneert de aansturing van de ontruiming (extern via BMI)?", type: "vraag" },
+  { vraag: "44. Akoestische signaalgevers: Geluidsniveau 3e alarm zonder slowwhoops", type: "tekst", eenheid: "dB" },
+  { vraag: "45. Akoestische signaalgevers: Geluidsniveau 3e alarm met slowwhoops", type: "tekst", eenheid: "dB" },
+].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
 function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void }) {
   const [bezig, setBezig] = useState(false);
@@ -274,7 +300,7 @@ export default function App() {
   const [bm, setBm] = useState<BrandmeldData>(defaultBm);
   const [gas, setGas] = useState<GasdetectieData>(defaultGas);
   const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(defaultVentRijen);
-  const [ventChecklist, setVentChecklist] = useState<{vraag:string;status:string;opmerking:string}[]>(defaultVentChecklist);
+  const [ventChecklist, setVentChecklist] = useState<{vraag:string;status:string;opmerking:string;type?:string;eenheid?:string;waarde?:string}[]>(defaultVentChecklist);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
@@ -650,13 +676,64 @@ export default function App() {
               )}
             </Card>
             <Card icon="✅" title="Checklist">
-              {gas.checklistItems.map((item, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 14px", borderRadius: 10, background: i%2===0?"#f8fafc":"#fff", border: "1px solid #f1f5f9", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                  <StatusPill status={item.status} onChange={s => { const a=[...gas.checklistItems]; a[i]={...a[i],status:s}; setGas({...gas,checklistItems:a}); }} />
-                  <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setGas({...gas,checklistItems:a}); }} />
-                </div>
-              ))}
+              {gas.checklistItems.map((item, i) => {
+                if (item.type === "header") return (
+                  <div key={i} style={{ padding: "14px 14px 2px", marginTop: i>0?8:0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{item.vraag}</span>
+                    <div style={{ borderTop: "2px solid #e2e8f0", marginTop: 6 }} />
+                  </div>
+                );
+                const rowBg = { borderRadius: 10, border: "1px solid #f1f5f9", marginBottom: 6, padding: "10px 14px" };
+                if (item.linked === "ruststroom") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{gas.ruststroom || "—"} A</span>
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← berekening</span>
+                    </div>
+                  </div>
+                );
+                if (item.linked === "alarmstroom") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{gas.alarmstroom || "—"} A</span>
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← berekening</span>
+                    </div>
+                  </div>
+                );
+                if (item.linked === "noodvoldoet") {
+                  const voldoet = isUPS ? gasUPSVoldoende : gasAccuVoldoende;
+                  return (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        {voldoet===null
+                          ? <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul berekening in</span>
+                          : <span style={{ background: voldoet?"#f0fdf4":"#fef2f2", border: `1px solid ${voldoet?"#bbf7d0":"#fecaca"}`, borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: voldoet?"#15803d":"#dc2626" }}>{voldoet?"Voldoende ✓":"Onvoldoende ✗"}</span>
+                        }
+                        <span style={{ fontSize: 11, color: "#94a3b8" }}>← berekening</span>
+                      </div>
+                    </div>
+                  );
+                }
+                if (item.type === "tekst") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", width: 120}} value={item.waarde||""} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setGas({...gas,checklistItems:a}); }} />
+                      {item.eenheid && <span style={{ fontSize: 12, color: "#64748b", minWidth: 20 }}>{item.eenheid}</span>}
+                    </div>
+                  </div>
+                );
+                return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <StatusPill status={item.status} onChange={s => { const a=[...gas.checklistItems]; a[i]={...a[i],status:s}; setGas({...gas,checklistItems:a}); }} />
+                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setGas({...gas,checklistItems:a}); }} />
+                  </div>
+                );
+              })}
             </Card>
           </div>
         )}
@@ -710,13 +787,31 @@ export default function App() {
               );
             })}
             <Card icon="✅" title="Checklist ventilatie">
-              {ventChecklist.map((item, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 14px", borderRadius: 10, background: i%2===0?"#f8fafc":"#fff", border: "1px solid #f1f5f9", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                  <StatusPill status={item.status} onChange={s => { const a=[...ventChecklist]; a[i]={...a[i],status:s}; setVentChecklist(a); }} />
-                  <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],opmerking:e.target.value}; setVentChecklist(a); }} />
-                </div>
-              ))}
+              {ventChecklist.map((item, i) => {
+                if (item.type === "header") return (
+                  <div key={i} style={{ padding: "14px 14px 2px", marginTop: i>0?8:0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{item.vraag}</span>
+                    <div style={{ borderTop: "2px solid #e2e8f0", marginTop: 6 }} />
+                  </div>
+                );
+                const rowBg = { borderRadius: 10, border: "1px solid #f1f5f9", marginBottom: 6, padding: "10px 14px" };
+                if (item.type === "tekst") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", width: 120}} value={item.waarde||""} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],waarde:e.target.value}; setVentChecklist(a); }} />
+                      {item.eenheid && <span style={{ fontSize: 12, color: "#64748b", minWidth: 20 }}>{item.eenheid}</span>}
+                    </div>
+                  </div>
+                );
+                return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <StatusPill status={item.status} onChange={s => { const a=[...ventChecklist]; a[i]={...a[i],status:s}; setVentChecklist(a); }} />
+                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],opmerking:e.target.value}; setVentChecklist(a); }} />
+                  </div>
+                );
+              })}
             </Card>
           </div>
         )}
