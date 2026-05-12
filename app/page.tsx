@@ -1250,19 +1250,19 @@ export default function App() {
                   <thead>
                     <tr>
                       {["Garage","Storing","Auto melder","Handmelder","Opmerking",""].map(h=>(
-                        <th key={h} style={{ padding:"10px 14px",textAlign:"left",background:"#f8fafc",color:"#64748b",fontWeight:700,fontSize:11,letterSpacing:"0.05em",textTransform:"uppercase" as const,borderBottom:"2px solid #e2e8f0" }}>{h}</th>
+                        <th key={h} style={{ padding:"10px 14px",textAlign:"left",background:VW_SURF2,color:VW_MUTED,fontWeight:700,fontSize:11,letterSpacing:"0.05em",textTransform:"uppercase" as const,borderBottom:`2px solid ${VW_BORDER}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {logboek.map((rij,i)=>(
-                      <tr key={i} style={{ borderBottom:"1px solid #f1f5f9" }}>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. Garage Noord" value={rij.garage||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],garage:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:180,fontSize:12}} placeholder="bijv. storing voeding" value={rij.storing||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],storing:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. RA-01" value={rij.automelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],automelder:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. HBM-05" value={rij.handmelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],handmelder:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:180,fontSize:12}} placeholder="opmerking..." value={rij.opmerking} onChange={e=>{const a=[...logboek];a[i]={...a[i],opmerking:e.target.value};setLogboek(a);}}/></td>
-                        <td style={{ padding:"8px 6px" }}><button onClick={()=>setLogboek(logboek.filter((_,j)=>j!==i))} style={{ background:"#fef2f2",color:"#991b1b",border:"1.5px solid #fca5a5",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12,fontWeight:700 }}>✕</button></td>
+                      <tr key={i} style={{ borderBottom:`1px solid ${VW_BORDER}` }}>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:130,fontSize:12}} placeholder="bijv. Garage Noord" value={rij.garage||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],garage:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:170,fontSize:12}} placeholder="bijv. storing voeding" value={rij.storing||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],storing:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:130,fontSize:12}} placeholder="bijv. RA-01" value={rij.automelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],automelder:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:130,fontSize:12}} placeholder="bijv. HBM-05" value={rij.handmelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],handmelder:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:170,fontSize:12}} placeholder="opmerking..." value={rij.opmerking} onChange={e=>{const a=[...logboek];a[i]={...a[i],opmerking:e.target.value};setLogboek(a);}}/></td>
+                        <td style={{ padding:"8px 6px", whiteSpace:"nowrap" as const }}><button onClick={()=>setLogboek(logboek.filter((_,j)=>j!==i))} style={{ background:"#fef2f2",color:"#991b1b",border:"1px solid #fecaca",borderRadius:6,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700 }}>Verwijder</button></td>
                       </tr>
                     ))}
                   </tbody>
