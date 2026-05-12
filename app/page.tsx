@@ -266,17 +266,20 @@ function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data:
 }
 
 // ── VanWinden huisstijl ──────────────────────────────────────────
-const VW_BLUE   = "#1a6bb5";   // primair blauw (logo)
-const VW_BLUE_L = "#e8f1fb";   // lichtblauw achtergrond
-const VW_DARK   = "#111827";   // bijna zwart voor tekst / header
-const VW_GRAY   = "#f1f4f8";   // pagina-achtergrond
-const VW_BORDER = "#dde3ec";   // kaart-rand
+const VW_CYAN   = "#00d4d4";   // cyaan accent (logo / knoppen)
+const VW_CYAN_D = "#00aaaa";   // donkerder cyaan (hover/active)
+const VW_BG     = "#16161e";   // pagina achtergrond
+const VW_SURF   = "#1e1e2a";   // kaart achtergrond
+const VW_SURF2  = "#252535";   // iets lichter oppervlak
+const VW_BORDER = "#2e2e42";   // randen
+const VW_TEXT   = "#f1f5f9";   // primaire tekst
+const VW_MUTED  = "#8892a4";   // subtekst
 
 function StatusPill({ status, onChange }: { status: string; onChange: (s: string) => void }) {
   const btns = [
-    { label: "Ja",     activeColor: "#15803d", activeBg: "#16a34a" },
-    { label: "Nee",    activeColor: "#991b1b", activeBg: "#dc2626" },
-    { label: "N.v.t.", activeColor: "#374151", activeBg: "#4b5563" },
+    { label: "Ja",     activeBg: "#065f46", activeText: "#6ee7b7", activeBorder: "#10b981" },
+    { label: "Nee",    activeBg: "#7f1d1d", activeText: "#fca5a5", activeBorder: "#ef4444" },
+    { label: "N.v.t.", activeBg: "#1e293b", activeText: "#94a3b8", activeBorder: "#475569" },
   ];
   return (
     <div style={{ display: "flex", gap: 4 }}>
@@ -284,9 +287,9 @@ function StatusPill({ status, onChange }: { status: string; onChange: (s: string
         const isActive = status === b.label;
         return (
           <button key={b.label} onClick={() => onChange(b.label)} style={{
-            background: isActive ? b.activeBg : "#fff",
-            color: isActive ? "#fff" : "#374151",
-            border: `1px solid ${isActive ? b.activeBg : VW_BORDER}`,
+            background: isActive ? b.activeBg : VW_SURF2,
+            color: isActive ? b.activeText : VW_MUTED,
+            border: `1px solid ${isActive ? b.activeBorder : VW_BORDER}`,
             borderRadius: 6, padding: "5px 11px",
             fontWeight: 600, fontSize: 12, cursor: "pointer",
           }}>{b.label}</button>
@@ -301,23 +304,21 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
   const isBad  = color === "#ef4444" || color === "#dc2626";
   return (
     <div style={{
-      background: isGood ? "#f0fdf4" : isBad ? "#fef2f2" : "#fff",
-      borderRadius: 10, padding: "15px 18px", flex: 1, minWidth: 130,
-      border: `1px solid ${isGood ? "#bbf7d0" : isBad ? "#fecaca" : VW_BORDER}`,
-      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+      background: VW_SURF2, borderRadius: 10, padding: "15px 18px", flex: 1, minWidth: 130,
+      border: `1px solid ${isGood ? "#065f46" : isBad ? "#7f1d1d" : VW_BORDER}`,
     }}>
-      <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 7 }}>{label}</div>
-      <div style={{ fontSize: 23, fontWeight: 700, color: isGood ? "#166534" : isBad ? "#991b1b" : VW_DARK, lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: isGood ? "#166534" : isBad ? "#991b1b" : "#6b7280", marginTop: 5, fontWeight: 600 }}>{sub}</div>}
+      <div style={{ fontSize: 10, color: VW_MUTED, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 7 }}>{label}</div>
+      <div style={{ fontSize: 23, fontWeight: 700, color: isGood ? "#6ee7b7" : isBad ? "#fca5a5" : VW_CYAN, lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: isGood ? "#6ee7b7" : isBad ? "#fca5a5" : VW_MUTED, marginTop: 5, fontWeight: 600 }}>{sub}</div>}
     </div>
   );
 }
 
 function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: string }) {
   const cfg = {
-    success: { bg: "#f0fdf4", border: "#bbf7d0", accent: "#16a34a", label: "OK",      color: "#166534" },
-    warning: { bg: "#fffbeb", border: "#fde68a", accent: "#b45309", label: "Let op",  color: "#78350f" },
-    danger:  { bg: "#fef2f2", border: "#fecaca", accent: "#dc2626", label: "Actie",   color: "#991b1b" },
+    success: { bg: "#064e3b", border: "#065f46", accent: "#10b981", label: "OK",      color: "#6ee7b7" },
+    warning: { bg: "#451a03", border: "#78350f", accent: "#f59e0b", label: "Let op",  color: "#fcd34d" },
+    danger:  { bg: "#450a0a", border: "#7f1d1d", accent: "#ef4444", label: "Actie",   color: "#fca5a5" },
   }[type];
   return (
     <div style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.accent}`, border: `1px solid ${cfg.border}`, borderRadius: 8, padding: "11px 16px", color: cfg.color, fontWeight: 600, fontSize: 13, marginTop: 14, display: "flex", alignItems: "center", gap: 10 }}>
@@ -329,11 +330,11 @@ function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: strin
 
 function Card({ children, title, icon }: { children: React.ReactNode; title?: string; icon?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", border: `1px solid ${VW_BORDER}` }}>
+    <div style={{ background: VW_SURF, borderRadius: 12, padding: "20px 22px", marginBottom: 16, border: `1px solid ${VW_BORDER}` }}>
       {title && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${VW_BORDER}` }}>
-          {icon && <span style={{ fontSize: 15 }}>{icon}</span>}
-          <span style={{ fontSize: 13, fontWeight: 700, color: VW_DARK, letterSpacing: "0.01em" }}>{title}</span>
+          {icon && <span style={{ fontSize: 15, opacity: 0.7 }}>{icon}</span>}
+          <span style={{ fontSize: 13, fontWeight: 700, color: VW_TEXT, letterSpacing: "0.01em" }}>{title}</span>
         </div>
       )}
       {children}
@@ -341,8 +342,8 @@ function Card({ children, title, icon }: { children: React.ReactNode; title?: st
   );
 }
 
-const F: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 7, border: `1px solid ${VW_BORDER}`, fontSize: 14, boxSizing: "border-box" as const, background: "#fff", outline: "none", color: VW_DARK };
-const L: React.CSSProperties = { fontSize: 11, color: "#6b7280", fontWeight: 600, marginBottom: 4, display: "block", letterSpacing: "0.04em" };
+const F: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 7, border: `1px solid ${VW_BORDER}`, fontSize: 14, boxSizing: "border-box" as const, background: VW_SURF2, outline: "none", color: VW_TEXT };
+const L: React.CSSProperties = { fontSize: 11, color: VW_MUTED, fontWeight: 600, marginBottom: 4, display: "block", letterSpacing: "0.04em" };
 const G2: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
 const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 };
 
@@ -562,21 +563,21 @@ export default function App() {
   if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: VW_GRAY, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: VW_BG, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: VW_DARK, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+      <div style={{ background: VW_SURF, borderBottom: `1px solid ${VW_BORDER}` }}>
         {/* Bovenste rij: logo + knoppen */}
         <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <img src={LOGO} alt="VanWinden Techniek" style={{ height: 36, width: 36, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
-            {info.opdrachtgever && (
-              <div style={{ color: "#9ca3af", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{info.opdrachtgever} · {info.datum || "—"}</div>
-            )}
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>Van Winden Techniek</div>
+            <div style={{ color: VW_CYAN, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+              Systeem App{info.opdrachtgever ? ` · ${info.opdrachtgever}` : ""}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <button onClick={slaOpAlsProject} style={{ background: VW_BLUE, color: "#fff", border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+            <button onClick={slaOpAlsProject} style={{ background: VW_CYAN, color: "#0a0a12", border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
               Opslaan
             </button>
             {opslaanMelding && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{opslaanMelding}</span>}
@@ -597,7 +598,7 @@ export default function App() {
               fontSize: 11, fontWeight: tab === t.id ? 700 : 400,
               color: tab === t.id ? "#fff" : "#9ca3af",
               background: "transparent",
-              borderBottom: tab === t.id ? `2px solid ${VW_BLUE}` : "2px solid transparent",
+              borderBottom: tab === t.id ? `2px solid ${VW_CYAN}` : "2px solid transparent",
               display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3,
             }}>
               <span style={{ fontSize: 15 }}>{t.icon}</span>
@@ -613,8 +614,8 @@ export default function App() {
         {tab === "info" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", margin: 0 }}>Projectgegevens</h1>
-              <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 13 }}>Vul de algemene projectinformatie in</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Projectgegevens</h1>
+              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Vul de algemene projectinformatie in</p>
             </div>
 
             {/* WERKBON SCANNER */}
@@ -644,12 +645,12 @@ export default function App() {
                     }} style={{
                       display: "flex", alignItems: "center", gap: 7,
                       padding: "10px 18px", borderRadius: 8, cursor: "pointer",
-                      border: `1px solid ${actief ? VW_BLUE : VW_BORDER}`,
-                      background: actief ? VW_BLUE_L : "#fff",
-                      color: actief ? VW_BLUE : "#374151",
+                      border: `1px solid ${actief ? VW_CYAN : VW_BORDER}`,
+                      background: actief ? VW_SURF2 : VW_SURF,
+                      color: actief ? VW_CYAN : VW_MUTED,
                       fontWeight: actief ? 700 : 500, fontSize: 13, fontFamily: "inherit",
                     }}>
-                      {actief && <span style={{ fontSize: 11, fontWeight: 800, color: VW_BLUE }}>✓</span>}
+                      {actief && <span style={{ fontSize: 11, fontWeight: 800, color: VW_CYAN }}>✓</span>}
                       {label}
                     </button>
                   );
@@ -691,8 +692,8 @@ export default function App() {
         {tab === "brandmeld" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", margin: 0 }}>Brandmeldinstallatie</h1>
-              <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 13 }}>Noodstroom, spanningen, geluid & checklist</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Brandmeldinstallatie</h1>
+              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Noodstroom, spanningen, geluid & checklist</p>
             </div>
             <Card icon="🔋" title="Accu berekening">
               <div style={G2}>
@@ -855,8 +856,8 @@ export default function App() {
         {tab === "gasdetectie" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", margin: 0 }}>Gasdetectie</h1>
-              <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 13 }}>UPS berekening & checklist</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Gasdetectie</h1>
+              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>UPS berekening & checklist</p>
             </div>
             <Card icon="⚙️" title="Installatie">
               <div style={G2}>
@@ -1025,8 +1026,8 @@ export default function App() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", margin: 0 }}>Ventilatie</h1>
-                <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 13 }}>Debietmetingen per ventilator</p>
+                <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Ventilatie</h1>
+                <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Debietmetingen per ventilator</p>
               </div>
               <button onClick={() => setVentRijen([...ventRijen, { type: "Afvoerventilator", naam: "", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }])}
                 style={{ background: "linear-gradient(135deg,#06b6d4,#0891b2)", color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 12px rgba(6,182,212,0.3)" }}>
@@ -1236,7 +1237,7 @@ export default function App() {
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22 }}>
               <div>
                 <h1 style={{ fontSize:22,fontWeight:700,color:"#111827",letterSpacing:"-0.02em",margin:0 }}>Beheer BMI</h1>
-                <p style={{ color:"#6b7280",margin:"4px 0 0",fontSize:13 }}>Storings- en meldingsregistratie</p>
+                <p style={{ color:VW_MUTED,margin:"4px 0 0",fontSize:13 }}>Storings- en meldingsregistratie</p>
               </div>
               <button onClick={()=>setLogboek([...logboek,{garage:"",opmerking:"",storing:"",automelder:"",handmelder:""}])}
                 style={{ background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",color:"#fff",border:"none",borderRadius:12,padding:"10px 18px",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 4px 12px rgba(139,92,246,0.3)" }}>
@@ -1275,7 +1276,7 @@ export default function App() {
           <div>
             <div style={{ marginBottom:22 }}>
               <h1 style={{ fontSize:22,fontWeight:700,color:"#111827",letterSpacing:"-0.02em",margin:0 }}>Aantekeningen</h1>
-              <p style={{ color:"#6b7280",margin:"4px 0 0",fontSize:13 }}>Notities, bevindingen en aanbevelingen</p>
+              <p style={{ color:VW_MUTED,margin:"4px 0 0",fontSize:13 }}>Notities, bevindingen en aanbevelingen</p>
             </div>
             <Card icon="✏️" title="Vrije notities">
               <textarea value={aantekeningen} onChange={e=>setAantekeningen(e.target.value)}
@@ -1389,8 +1390,8 @@ export default function App() {
         {tab === "werkbon" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", margin: 0 }}>Werkbon gegevens</h1>
-              <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 13 }}>Alle gegevens uitgelezen van de gescande werkbon</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Werkbon gegevens</h1>
+              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Alle gegevens uitgelezen van de gescande werkbon</p>
             </div>
             {werkbonDoormel.length === 0 && werkbonExtra.length === 0 ? (
               <Card icon="📄" title="Nog geen werkbon gescand">
@@ -1441,13 +1442,13 @@ export default function App() {
       {/* CODES PANEEL */}
       {toonCodes && (
         <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => setToonCodes(false)}>
-          <div style={{ background: "#fff", width: "100%", maxHeight: "80vh", borderRadius: "20px 20px 0 0", padding: 24, overflowY: "auto" as const }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: VW_SURF, width: "100%", maxHeight: "80vh", borderRadius: "16px 16px 0 0", padding: 24, overflowY: "auto" as const, border: `1px solid ${VW_BORDER}`, borderBottom: "none" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#0f172a" }}>🔑 Installateurscodes</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: VW_TEXT }}>🔑 Installateurscodes</h2>
                 <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>Tik op een code om te kopiëren</p>
               </div>
-              <button onClick={() => setToonCodes(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Sluiten</button>
+              <button onClick={() => setToonCodes(false)} style={{ background: VW_SURF2, border: `1px solid ${VW_BORDER}`, borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: VW_MUTED }}>Sluiten</button>
             </div>
             {kopieermeldingCode && (
               <div style={{ marginBottom: 12, padding: "8px 14px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#166534" }}>
@@ -1479,13 +1480,13 @@ export default function App() {
       {/* PROJECTEN PANEEL */}
       {toonProjecten && (
         <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => setToonProjecten(false)}>
-          <div style={{ background: "#fff", width: "100%", maxHeight: "80vh", borderRadius: "20px 20px 0 0", padding: 24, overflowY: "auto" as const }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: VW_SURF, width: "100%", maxHeight: "80vh", borderRadius: "16px 16px 0 0", padding: 24, overflowY: "auto" as const, border: `1px solid ${VW_BORDER}`, borderBottom: "none" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#0f172a" }}>Opgeslagen projecten</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: VW_TEXT }}>Opgeslagen projecten</h2>
                 <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>{projecten.length} project{projecten.length !== 1 ? "en" : ""} opgeslagen op dit apparaat</p>
               </div>
-              <button onClick={() => setToonProjecten(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Sluiten</button>
+              <button onClick={() => setToonProjecten(false)} style={{ background: VW_SURF2, border: `1px solid ${VW_BORDER}`, borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: VW_MUTED }}>Sluiten</button>
             </div>
             {projecten.length === 0 ? (
               <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
