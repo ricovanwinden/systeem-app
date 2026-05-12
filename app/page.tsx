@@ -566,7 +566,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: VW_BG, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: VW_SURF, borderBottom: `1px solid ${VW_BORDER}` }}>
+      <div style={{ background: "#111827", borderBottom: "1px solid #1f2937" }}>
         {/* Bovenste rij: logo + knoppen */}
         <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <img src={LOGO} alt="VanWinden Techniek" style={{ height: 36, width: 36, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
