@@ -894,6 +894,50 @@ export default function App() {
                   </div>
                 );
                 const rowBg = { borderRadius: 10, border: "1px solid #f1f5f9", marginBottom: 6, padding: "10px 14px" };
+                // Item 19: stroomafname afvoerventilatoren ← ventStroom.afvoer
+                if (item.type === "tekst" && item.vraag.startsWith("19.")) {
+                  const gevuld = ventStroom.afvoer.filter(r => r.stroom);
+                  return (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const, justifyContent: "flex-end" }}>
+                        {gevuld.length === 0
+                          ? <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul stroommetingen in</span>
+                          : gevuld.map((r, j) => (
+                              <span key={j} style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700, color: "#0369a1" }}>{r.naam}: {r.stroom} A</span>
+                            ))
+                        }
+                        <span style={{ fontSize: 11, color: "#94a3b8" }}>← stroommetingen</span>
+                      </div>
+                    </div>
+                  );
+                }
+                // Item 24: dagbedrijf ← ventStroom.regelkastDag
+                if (item.type === "tekst" && item.vraag.startsWith("24.")) return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {ventStroom.regelkastDag
+                        ? <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{ventStroom.regelkastDag} A</span>
+                        : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul stroommetingen in</span>
+                      }
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← stroommetingen</span>
+                    </div>
+                  </div>
+                );
+                // Item 25: vollast ← ventStroom.regelkastVollast
+                if (item.type === "tekst" && item.vraag.startsWith("25.")) return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {ventStroom.regelkastVollast
+                        ? <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{ventStroom.regelkastVollast} A</span>
+                        : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul stroommetingen in</span>
+                      }
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>← stroommetingen</span>
+                    </div>
+                  </div>
+                );
                 if (item.type === "tekst") return (
                   <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
                     <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
