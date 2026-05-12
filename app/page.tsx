@@ -427,6 +427,7 @@ export default function App() {
   const bmVoldoende = bmBenodigd !== null && bmHuidig !== null ? bmHuidig >= bmBenodigd : null;
 
   const isUPS = gas.noodstroomType === "UPS";
+  const heeftBerekening = gas.noodstroomType !== "Noodaggregaat";
   const gasLeeftijd = gas.bouwjaarAccu ? new Date().getFullYear() - parseInt(gas.bouwjaarAccu) : null;
   const gasTeOud = gasLeeftijd !== null && gasLeeftijd >= 4;
   // Stroom + uren — gedeeld door UPS én Accu berekening
@@ -642,7 +643,7 @@ export default function App() {
                 <div><label style={L}>Datum geplaatst</label><input style={F} type="date" value={gas.datumGeplaatst} onChange={e => setGas({...gas, datumGeplaatst: e.target.value})} /></div>
               </div>
             </Card>
-            <Card icon="🔋" title={isUPS ? "UPS berekening (VA)" : "Accu berekening (Ah)"}>
+            {heeftBerekening && <Card icon="🔋" title={isUPS ? "UPS berekening (VA)" : "Accu berekening (Ah)"}>
               {isUPS ? (
                 <>
                   <div style={G2}>
@@ -693,7 +694,7 @@ export default function App() {
                   {gasAccuVoldoende===true && !gasTeOud && <Alert type="success" text="Accu goedgekeurd." />}
                 </>
               )}
-            </Card>
+            </Card>}
             <Card icon="✅" title="Checklist">
               {gas.checklistItems.map((item, i) => {
                 if (item.type === "header") return (
