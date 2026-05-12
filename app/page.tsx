@@ -293,37 +293,38 @@ function StatusPill({ status, onChange }: { status: string; onChange: (s: string
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
     <div style={{
-      background: "#fff", borderRadius: 16, padding: "18px 20px", flex: 1, minWidth: 130,
-      border: `2px solid ${color ?? "#e2e8f0"}`,
-      boxShadow: color ? `0 0 0 4px ${color}22` : "0 1px 6px rgba(0,0,0,0.06)",
+      background: color ? `linear-gradient(135deg, ${color}18 0%, ${color}08 100%)` : "linear-gradient(135deg, #f8fafc 0%, #fff 100%)",
+      borderRadius: 14, padding: "16px 20px", flex: 1, minWidth: 130,
+      border: `2px solid ${color ? color + "55" : "#e2e8f0"}`,
+      boxShadow: color ? `0 4px 20px ${color}30` : "0 2px 8px rgba(0,0,0,0.07)",
     }}>
-      <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: color ?? "#1e293b", lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: color ?? "#64748b", marginTop: 5, fontWeight: 600 }}>{sub}</div>}
+      <div style={{ fontSize: 10, color: color ?? "#64748b", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 900, color: color ?? "#0f172a", lineHeight: 1, letterSpacing: "-0.02em" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: color ?? "#64748b", marginTop: 6, fontWeight: 700 }}>{sub}</div>}
     </div>
   );
 }
 
 function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: string }) {
   const cfg = {
-    success: { bg: "#f0fdf4", border: "#86efac", icon: "✅", color: "#166534" },
-    warning: { bg: "#fffbeb", border: "#fcd34d", icon: "⚠️", color: "#92400e" },
-    danger:  { bg: "#fef2f2", border: "#fca5a5", icon: "🚨", color: "#991b1b" },
+    success: { bg: "#f0fdf4", border: "#22c55e", accent: "#16a34a", icon: "✅", color: "#14532d" },
+    warning: { bg: "#fffbeb", border: "#f59e0b", accent: "#d97706", icon: "⚠️", color: "#78350f" },
+    danger:  { bg: "#fef2f2", border: "#ef4444", accent: "#dc2626", icon: "🚨", color: "#7f1d1d" },
   }[type];
   return (
-    <div style={{ background: cfg.bg, border: `1.5px solid ${cfg.border}`, borderRadius: 12, padding: "12px 16px", color: cfg.color, fontWeight: 600, fontSize: 14, marginTop: 16, display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 18 }}>{cfg.icon}</span> {text}
+    <div style={{ background: cfg.bg, borderLeft: `4px solid ${cfg.accent}`, border: `1.5px solid ${cfg.border}`, borderRadius: 12, padding: "14px 18px", color: cfg.color, fontWeight: 700, fontSize: 14, marginTop: 16, display: "flex", alignItems: "center", gap: 12, boxShadow: `0 2px 12px ${cfg.border}30` }}>
+      <span style={{ fontSize: 20 }}>{cfg.icon}</span> {text}
     </div>
   );
 }
 
 function Card({ children, title, icon }: { children: React.ReactNode; title?: string; icon?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 20, padding: "22px 24px", marginBottom: 20, boxShadow: "0 2px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
+    <div style={{ background: "#fff", borderRadius: 18, padding: "22px 24px", marginBottom: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)", border: "1px solid #e8edf4" }}>
       {title && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: "2px solid #f8fafc" }}>
-          {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{title}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: "2px solid #f1f5f9" }}>
+          {icon && <span style={{ fontSize: 20 }}>{icon}</span>}
+          <span style={{ fontSize: 15, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</span>
         </div>
       )}
       {children}
@@ -331,8 +332,8 @@ function Card({ children, title, icon }: { children: React.ReactNode; title?: st
   );
 }
 
-const F: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 14, boxSizing: "border-box" as const, background: "#fff", outline: "none", color: "#1e293b" };
-const L: React.CSSProperties = { fontSize: 12, color: "#64748b", fontWeight: 700, marginBottom: 5, display: "block", letterSpacing: "0.03em", textTransform: "uppercase" as const };
+const F: React.CSSProperties = { width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d1d9e6", fontSize: 14, boxSizing: "border-box" as const, background: "#f8fafc", outline: "none", color: "#0f172a", fontWeight: 500 };
+const L: React.CSSProperties = { fontSize: 11, color: "#475569", fontWeight: 800, marginBottom: 6, display: "block", letterSpacing: "0.08em", textTransform: "uppercase" as const };
 const G2: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
 const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 };
 
@@ -552,21 +553,21 @@ export default function App() {
   if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #f0f4f8 0%, #e8edf5 100%)", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", boxShadow: "0 4px 24px rgba(0,0,0,0.2)" }}>
+      <div style={{ background: "linear-gradient(135deg, #060d1a 0%, #0f1f3d 60%, #1a1040 100%)", boxShadow: "0 4px 32px rgba(0,0,0,0.4)" }}>
         {/* Bovenste rij: logo + knoppen */}
-        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <img src={LOGO} alt="VanWinden Techniek" style={{ height: 36, width: 36, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <img src={LOGO} alt="VanWinden Techniek" style={{ height: 40, width: 40, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 14, letterSpacing: "-0.02em", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
+            <div style={{ color: "#fff", fontWeight: 900, fontSize: 15, letterSpacing: "-0.03em", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
             {info.opdrachtgever && (
-              <div style={{ color: "#475569", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{info.opdrachtgever} · {info.datum || "—"}</div>
+              <div style={{ color: "#6d8ab0", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 600 }}>{info.opdrachtgever} · {info.datum || "—"}</div>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <button onClick={slaOpAlsProject} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+            <button onClick={slaOpAlsProject} style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 16px", cursor: "pointer", fontSize: 13, fontWeight: 800, boxShadow: "0 4px 14px rgba(16,185,129,0.4)", letterSpacing: "-0.01em" }}>
               💾 Opslaan
             </button>
             {opslaanMelding && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{opslaanMelding}</span>}
@@ -580,14 +581,17 @@ export default function App() {
           </div>
         </div>
         {/* Onderste rij: tabs op volledige breedte */}
-        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as const }}>
+        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as const, padding: "6px 4px 0" }}>
           {tabs.filter(t => !["brandmeld","gasdetectie","ventilatie","logboek"].includes(t.id) || actieveTabs.includes(t.id)).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, minWidth: 0, padding: "14px 8px 12px", border: "none", background: "none", cursor: "pointer",
-              fontSize: 12, fontWeight: tab === t.id ? 700 : 400,
-              color: tab === t.id ? "#fff" : "#64748b",
-              borderBottom: tab === t.id ? `3px solid ${t.color}` : "3px solid transparent",
+              flex: 1, minWidth: 0, padding: "10px 6px 10px", border: "none", cursor: "pointer",
+              fontSize: 11, fontWeight: tab === t.id ? 800 : 500,
+              color: tab === t.id ? "#fff" : "#4d6380",
+              background: tab === t.id ? `linear-gradient(135deg, ${t.color}dd, ${t.color}99)` : "transparent",
+              borderRadius: tab === t.id ? "10px 10px 0 0" : "10px 10px 0 0",
+              boxShadow: tab === t.id ? `0 -2px 12px ${t.color}50` : "none",
               display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3,
+              transition: "all 0.15s",
             }}>
               <span style={{ fontSize: 18 }}>{t.icon}</span>
               <span style={{ whiteSpace: "nowrap" as const }}>{t.label}</span>
@@ -597,12 +601,12 @@ export default function App() {
       </div>
 
       {/* CONTENT */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "28px 20px" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 20px" }}>
 
         {tab === "info" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Projectgegevens</h1>
+              <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0a0f1e", letterSpacing: "-0.03em", margin: 0 }}>Projectgegevens</h1>
               <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Vul de algemene projectinformatie in</p>
             </div>
 
@@ -683,7 +687,7 @@ export default function App() {
         {tab === "brandmeld" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Brandmeldinstallatie</h1>
+              <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0a0f1e", letterSpacing: "-0.03em", margin: 0 }}>Brandmeldinstallatie</h1>
               <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Noodstroom, spanningen, geluid & checklist</p>
             </div>
             <Card icon="🔋" title="Accu berekening">
@@ -847,7 +851,7 @@ export default function App() {
         {tab === "gasdetectie" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Gasdetectie</h1>
+              <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0a0f1e", letterSpacing: "-0.03em", margin: 0 }}>Gasdetectie</h1>
               <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>UPS berekening & checklist</p>
             </div>
             <Card icon="⚙️" title="Installatie">
@@ -1017,7 +1021,7 @@ export default function App() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Ventilatie</h1>
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0a0f1e", letterSpacing: "-0.03em", margin: 0 }}>Ventilatie</h1>
                 <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Debietmetingen per ventilator</p>
               </div>
               <button onClick={() => setVentRijen([...ventRijen, { type: "Afvoerventilator", naam: "", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }])}
@@ -1227,7 +1231,7 @@ export default function App() {
           <div>
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22 }}>
               <div>
-                <h1 style={{ fontSize:24,fontWeight:800,color:"#0f172a",margin:0 }}>Beheer BMI</h1>
+                <h1 style={{ fontSize:26,fontWeight:900,color:"#0a0f1e",letterSpacing:"-0.03em",margin:0 }}>Beheer BMI</h1>
                 <p style={{ color:"#64748b",margin:"4px 0 0",fontSize:14 }}>Storings- en meldingsregistratie</p>
               </div>
               <button onClick={()=>setLogboek([...logboek,{garage:"",opmerking:"",storing:"",automelder:"",handmelder:""}])}
@@ -1266,7 +1270,7 @@ export default function App() {
         {tab === "aantekeningen" && (
           <div>
             <div style={{ marginBottom:22 }}>
-              <h1 style={{ fontSize:24,fontWeight:800,color:"#0f172a",margin:0 }}>Aantekeningen</h1>
+              <h1 style={{ fontSize:26,fontWeight:900,color:"#0a0f1e",letterSpacing:"-0.03em",margin:0 }}>Aantekeningen</h1>
               <p style={{ color:"#64748b",margin:"4px 0 0",fontSize:14 }}>Notities, bevindingen en aanbevelingen</p>
             </div>
             <Card icon="✏️" title="Vrije notities">
@@ -1381,7 +1385,7 @@ export default function App() {
         {tab === "werkbon" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0 }}>Werkbon gegevens</h1>
+              <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0a0f1e", letterSpacing: "-0.03em", margin: 0 }}>Werkbon gegevens</h1>
               <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Alle gegevens uitgelezen van de gescande werkbon</p>
             </div>
             {werkbonDoormel.length === 0 && werkbonExtra.length === 0 ? (
