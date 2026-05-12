@@ -417,13 +417,17 @@ export default function App() {
   const isUPS = gas.noodstroomType === "UPS";
   const gasLeeftijd = gas.bouwjaarAccu ? new Date().getFullYear() - parseInt(gas.bouwjaarAccu) : null;
   const gasTeOud = gasLeeftijd !== null && gasLeeftijd >= 4;
-  // UPS: bereken in VA — benodigd = belasting * 1.25, aanwezig = UPS vermogen
-  const gasUPSBelasting = parseFloat(gas.belasting) || null;
+  // Stroom + uren — gedeeld door UPS én Accu berekening
+  const gasRust = parseFloat(gas.ruststroom) || null;
+  const gasAlarm = parseFloat(gas.alarmstroom) || null;
+  const gasUren = parseFloat(gas.backupUren) || 12;
+  // UPS: ruststroom/alarmstroom (mA) × 230V = VA belasting
+  const gasRustVA = gasRust ? Math.round((gasRust / 1000) * 230) : null;
+  const gasAlarmVA = gasAlarm ? Math.round((gasAlarm / 1000) * 230) : null;
   const gasUPSVermogen = parseFloat(gas.upsvermogen) || null;
-  const gasUPSBenodigd = gasUPSBelasting ? Math.ceil(gasUPSBelasting * 1.25) : null;
+  const gasUPSBenodigd = gasAlarmVA ? Math.ceil(gasAlarmVA * 1.25) : null;
   const gasUPSVoldoende = gasUPSBenodigd !== null && gasUPSVermogen !== null ? gasUPSVermogen >= gasUPSBenodigd : null;
   // Accu: bereken in Ah — benodigd via ruststroom + alarmstroom
-  const gasRust = parseFloat(gas.ruststroom), gasAlarm = parseFloat(gas.alarmstroom), gasUren = parseFloat(gas.backupUren) || 12;
   const gasAccuBenodigd = gasRust && gasAlarm ? berekenAccuBrandmeld(gasRust, gasAlarm, gasUren) : null;
   const gasHuidig = parseFloat(gas.huidigCapaciteit) || null;
   const gasAccuVoldoende = gasAccuBenodigd !== null && gasHuidig !== null ? gasHuidig >= gasAccuBenodigd : null;
@@ -630,7 +634,8 @@ export default function App() {
               {isUPS ? (
                 <>
                   <div style={G2}>
-                    <div><label style={L}>Aansluitvermogen / belasting (VA)</label><input style={F} type="number" placeholder="bijv. 800" value={gas.belasting} onChange={e => setGas({...gas, belasting: e.target.value})} /></div>
+                    <div><label style={L}>Ruststroom (mA) @ 230V</label><input style={F} type="number" placeholder="bijv. 150" value={gas.ruststroom} onChange={e => setGas({...gas, ruststroom: e.target.value})} /></div>
+                    <div><label style={L}>Alarmstroom (mA) @ 230V</label><input style={F} type="number" placeholder="bijv. 450" value={gas.alarmstroom} onChange={e => setGas({...gas, alarmstroom: e.target.value})} /></div>
                     <div><label style={L}>UPS vermogen (VA)</label>
                       <select style={F} value={gas.upsvermogen} onChange={e => setGas({...gas, upsvermogen: e.target.value})}>
                         {["600","800","1000","1500","2000","3000"].map(o => <option key={o} value={o}>{o} VA</option>)}
@@ -638,10 +643,12 @@ export default function App() {
                     </div>
                     <div><label style={L}>Bouwjaar accu</label><input style={F} type="number" placeholder="bijv. 2021" value={gas.bouwjaarAccu} onChange={e => setGas({...gas, bouwjaarAccu: e.target.value})} /></div>
                   </div>
-                  {gasUPSBenodigd !== null && (
+                  {(gasRustVA !== null || gasAlarmVA !== null) && (
                     <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" as const }}>
-                      <StatCard label="Benodigd" value={gasUPSBenodigd+" VA"} sub="incl. 25% veiligheidsmarge" />
-                      {gasUPSVermogen && <StatCard label="UPS aanwezig" value={gasUPSVermogen+" VA"} color={gasUPSVoldoende?"#10b981":"#ef4444"} sub={gasUPSVoldoende?"Voldoende ✓":"Te klein ✗"} />}
+                      {gasRustVA !== null && <StatCard label="Rust vermogen" value={gasRustVA+" VA"} sub="belasting in rust" />}
+                      {gasAlarmVA !== null && <StatCard label="Alarm vermogen" value={gasAlarmVA+" VA"} sub="belasting in alarm" />}
+                      {gasUPSBenodigd !== null && <StatCard label="UPS benodigd" value={gasUPSBenodigd+" VA"} sub="incl. 25% marge" />}
+                      {gasUPSVermogen && gasUPSBenodigd !== null && <StatCard label="UPS aanwezig" value={gasUPSVermogen+" VA"} color={gasUPSVoldoende?"#10b981":"#ef4444"} sub={gasUPSVoldoende?"Voldoende ✓":"Te klein ✗"} />}
                       {gasLeeftijd !== null && <StatCard label="Leeftijd accu" value={gasLeeftijd+" jaar"} color={gasTeOud?"#ef4444":"#10b981"} sub={gasTeOud?"Vervangen!":"Goedgekeurd ✓"} />}
                     </div>
                   )}
