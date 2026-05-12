@@ -521,6 +521,8 @@ export default function App() {
     setWerkbonScanPreview(null);
     setWerkbonExtra([]);
     setWerkbonDoormel([]);
+    setActieveTabs(["brandmeld", "gasdetectie", "ventilatie", "logboek"]);
+    setTab("info");
     setScannerKey(k => k + 1);
   }
 
