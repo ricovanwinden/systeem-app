@@ -265,11 +265,18 @@ function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data:
   );
 }
 
+// ── VanWinden huisstijl ──────────────────────────────────────────
+const VW_BLUE   = "#1a6bb5";   // primair blauw (logo)
+const VW_BLUE_L = "#e8f1fb";   // lichtblauw achtergrond
+const VW_DARK   = "#111827";   // bijna zwart voor tekst / header
+const VW_GRAY   = "#f1f4f8";   // pagina-achtergrond
+const VW_BORDER = "#dde3ec";   // kaart-rand
+
 function StatusPill({ status, onChange }: { status: string; onChange: (s: string) => void }) {
-  const btns: { label: string; bg: string; text: string; border: string; active: string }[] = [
-    { label: "Ja",    bg: "#f0fdf4", text: "#15803d", border: "#86efac", active: "#16a34a" },
-    { label: "Nee",   bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", active: "#dc2626" },
-    { label: "N.v.t.",bg: "#f8fafc", text: "#64748b", border: "#cbd5e1", active: "#475569" },
+  const btns = [
+    { label: "Ja",     activeColor: "#15803d", activeBg: "#16a34a" },
+    { label: "Nee",    activeColor: "#991b1b", activeBg: "#dc2626" },
+    { label: "N.v.t.", activeColor: "#374151", activeBg: "#4b5563" },
   ];
   return (
     <div style={{ display: "flex", gap: 4 }}>
@@ -277,12 +284,11 @@ function StatusPill({ status, onChange }: { status: string; onChange: (s: string
         const isActive = status === b.label;
         return (
           <button key={b.label} onClick={() => onChange(b.label)} style={{
-            background: isActive ? b.active : b.bg,
-            color: isActive ? "#fff" : b.text,
-            border: `1.5px solid ${isActive ? b.active : b.border}`,
-            borderRadius: 8, padding: "5px 10px",
-            fontWeight: 700, fontSize: 12, cursor: "pointer",
-            transition: "all 0.1s",
+            background: isActive ? b.activeBg : "#fff",
+            color: isActive ? "#fff" : "#374151",
+            border: `1px solid ${isActive ? b.activeBg : VW_BORDER}`,
+            borderRadius: 6, padding: "5px 11px",
+            fontWeight: 600, fontSize: 12, cursor: "pointer",
           }}>{b.label}</button>
         );
       })}
@@ -293,31 +299,29 @@ function StatusPill({ status, onChange }: { status: string; onChange: (s: string
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   const isGood = color === "#10b981" || color === "#22c55e";
   const isBad  = color === "#ef4444" || color === "#dc2626";
-  const textColor = isGood ? "#166534" : isBad ? "#991b1b" : "#111827";
-  const borderColor = isGood ? "#bbf7d0" : isBad ? "#fecaca" : "#e5e7eb";
-  const bgColor = isGood ? "#f0fdf4" : isBad ? "#fef2f2" : "#fff";
   return (
     <div style={{
-      background: bgColor, borderRadius: 12, padding: "16px 20px", flex: 1, minWidth: 130,
-      border: `1px solid ${borderColor}`,
-      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      background: isGood ? "#f0fdf4" : isBad ? "#fef2f2" : "#fff",
+      borderRadius: 10, padding: "15px 18px", flex: 1, minWidth: 130,
+      border: `1px solid ${isGood ? "#bbf7d0" : isBad ? "#fecaca" : VW_BORDER}`,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
     }}>
-      <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: textColor, lineHeight: 1, letterSpacing: "-0.02em" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: textColor, opacity: 0.75, marginTop: 5, fontWeight: 600 }}>{sub}</div>}
+      <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 7 }}>{label}</div>
+      <div style={{ fontSize: 23, fontWeight: 700, color: isGood ? "#166534" : isBad ? "#991b1b" : VW_DARK, lineHeight: 1, letterSpacing: "-0.01em" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: isGood ? "#166534" : isBad ? "#991b1b" : "#6b7280", marginTop: 5, fontWeight: 600 }}>{sub}</div>}
     </div>
   );
 }
 
 function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: string }) {
   const cfg = {
-    success: { bg: "#f0fdf4", border: "#bbf7d0", accent: "#16a34a", icon: "✓", color: "#166534" },
-    warning: { bg: "#fffbeb", border: "#fde68a", accent: "#d97706", icon: "!", color: "#92400e" },
-    danger:  { bg: "#fef2f2", border: "#fecaca", accent: "#dc2626", icon: "✕", color: "#991b1b" },
+    success: { bg: "#f0fdf4", border: "#bbf7d0", accent: "#16a34a", label: "OK",      color: "#166534" },
+    warning: { bg: "#fffbeb", border: "#fde68a", accent: "#b45309", label: "Let op",  color: "#78350f" },
+    danger:  { bg: "#fef2f2", border: "#fecaca", accent: "#dc2626", label: "Actie",   color: "#991b1b" },
   }[type];
   return (
-    <div style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.accent}`, border: `1px solid ${cfg.border}`, borderRadius: 10, padding: "12px 16px", color: cfg.color, fontWeight: 600, fontSize: 13, marginTop: 14, display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ width: 20, height: 20, borderRadius: "50%", background: cfg.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{cfg.icon}</span>
+    <div style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.accent}`, border: `1px solid ${cfg.border}`, borderRadius: 8, padding: "11px 16px", color: cfg.color, fontWeight: 600, fontSize: 13, marginTop: 14, display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ background: cfg.accent, color: "#fff", borderRadius: 4, padding: "1px 6px", fontSize: 10, fontWeight: 800, letterSpacing: "0.05em", flexShrink: 0 }}>{cfg.label}</span>
       {text}
     </div>
   );
@@ -325,11 +329,11 @@ function Alert({ type, text }: { type: "success"|"warning"|"danger"; text: strin
 
 function Card({ children, title, icon }: { children: React.ReactNode; title?: string; icon?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 14, padding: "22px 24px", marginBottom: 18, boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)", border: "1px solid #e5e7eb" }}>
+    <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.07)", border: `1px solid ${VW_BORDER}` }}>
       {title && (
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #f3f4f6" }}>
-          {icon && <span style={{ fontSize: 16, opacity: 0.7 }}>{icon}</span>}
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827", letterSpacing: "-0.01em" }}>{title}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${VW_BORDER}` }}>
+          {icon && <span style={{ fontSize: 15 }}>{icon}</span>}
+          <span style={{ fontSize: 13, fontWeight: 700, color: VW_DARK, letterSpacing: "0.01em" }}>{title}</span>
         </div>
       )}
       {children}
@@ -337,8 +341,8 @@ function Card({ children, title, icon }: { children: React.ReactNode; title?: st
   );
 }
 
-const F: React.CSSProperties = { width: "100%", padding: "10px 13px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, boxSizing: "border-box" as const, background: "#fff", outline: "none", color: "#111827" };
-const L: React.CSSProperties = { fontSize: 11, color: "#6b7280", fontWeight: 600, marginBottom: 5, display: "block", letterSpacing: "0.05em", textTransform: "uppercase" as const };
+const F: React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: 7, border: `1px solid ${VW_BORDER}`, fontSize: 14, boxSizing: "border-box" as const, background: "#fff", outline: "none", color: VW_DARK };
+const L: React.CSSProperties = { fontSize: 11, color: "#6b7280", fontWeight: 600, marginBottom: 4, display: "block", letterSpacing: "0.04em" };
 const G2: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 };
 const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 };
 
@@ -558,46 +562,45 @@ export default function App() {
   if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: VW_GRAY, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: "#111827", boxShadow: "0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.3)" }}>
+      <div style={{ background: VW_DARK, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
         {/* Bovenste rij: logo + knoppen */}
-        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <img src={LOGO} alt="VanWinden Techniek" style={{ height: 36, width: 36, objectFit: "contain", mixBlendMode: "screen" as const, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "#f9fafb", fontWeight: 700, fontSize: 14, letterSpacing: "-0.01em", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>VanWinden Techniek</div>
             {info.opdrachtgever && (
-              <div style={{ color: "#6b7280", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{info.opdrachtgever} · {info.datum || "—"}</div>
+              <div style={{ color: "#9ca3af", fontSize: 11, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{info.opdrachtgever} · {info.datum || "—"}</div>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <button onClick={slaOpAlsProject} style={{ background: "#fff", color: "#111827", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+            <button onClick={slaOpAlsProject} style={{ background: VW_BLUE, color: "#fff", border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
               Opslaan
             </button>
             {opslaanMelding && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{opslaanMelding}</span>}
-            <button onClick={() => setToonProjecten(true)} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
+            <button onClick={() => setToonProjecten(true)} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
               📂 {projecten.length > 0 && <span style={{ position: "absolute" as const, top: 2, right: 2, background: "#3b82f6", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{projecten.length}</span>}
             </button>
-            <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
-            <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
-            <button onClick={() => setToonCodes(v => !v)} title="Standaard installateurscodes" style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 16 }}>🔑</button>
-            <button onClick={nieuwProject} style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
+            <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
+            <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
+            <button onClick={() => setToonCodes(v => !v)} title="Standaard installateurscodes" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>🔑</button>
+            <button onClick={nieuwProject} style={{ background: "transparent", color: "#6b7280", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
           </div>
         </div>
         {/* Onderste rij: tabs op volledige breedte */}
         <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as const }}>
           {tabs.filter(t => !["brandmeld","gasdetectie","ventilatie","logboek"].includes(t.id) || actieveTabs.includes(t.id)).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, minWidth: 0, padding: "12px 6px 11px", border: "none", cursor: "pointer",
+              flex: 1, minWidth: 0, padding: "11px 6px 10px", border: "none", cursor: "pointer",
               fontSize: 11, fontWeight: tab === t.id ? 700 : 400,
-              color: tab === t.id ? "#fff" : "#6b7280",
+              color: tab === t.id ? "#fff" : "#9ca3af",
               background: "transparent",
-              borderBottom: tab === t.id ? "2px solid #fff" : "2px solid transparent",
-              display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4,
-              transition: "color 0.15s",
+              borderBottom: tab === t.id ? `2px solid ${VW_BLUE}` : "2px solid transparent",
+              display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3,
             }}>
-              <span style={{ fontSize: 16, opacity: tab === t.id ? 1 : 0.6 }}>{t.icon}</span>
+              <span style={{ fontSize: 15 }}>{t.icon}</span>
               <span style={{ whiteSpace: "nowrap" as const }}>{t.label}</span>
             </button>
           ))}
@@ -625,13 +628,13 @@ export default function App() {
             </Card>
 
             <Card icon="🛠️" title="Werkzaamheden — welke tabbladen heb je nodig?">
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
                 {([
-                  { id: "brandmeld",   label: "Brandmeld",   icon: "🔴", color: "#ef4444" },
-                  { id: "gasdetectie", label: "Gasdetectie", icon: "🟡", color: "#f59e0b" },
-                  { id: "ventilatie",  label: "Ventilatie",  icon: "💨", color: "#06b6d4" },
-                  { id: "logboek",     label: "Beheer BMI",  icon: "📓", color: "#8b5cf6" },
-                ] as const).map(({ id, label, icon, color }) => {
+                  { id: "brandmeld",   label: "Brandmeld"   },
+                  { id: "gasdetectie", label: "Gasdetectie" },
+                  { id: "ventilatie",  label: "Ventilatie"  },
+                  { id: "logboek",     label: "Beheer BMI"  },
+                ] as const).map(({ id, label }) => {
                   const actief = actieveTabs.includes(id);
                   return (
                     <button key={id} onClick={() => {
@@ -639,18 +642,15 @@ export default function App() {
                       if (!actief) setTab(id as Tab);
                       else if (tab === (id as Tab)) setTab("info");
                     }} style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "12px 20px", borderRadius: 12, cursor: "pointer",
-                      border: `2px solid ${actief ? color : "#e2e8f0"}`,
-                      background: actief ? color : "#f8fafc",
-                      color: actief ? "#fff" : "#64748b",
-                      fontWeight: 700, fontSize: 14, fontFamily: "inherit",
-                      boxShadow: actief ? `0 4px 12px ${color}40` : "none",
-                      transition: "all 0.15s",
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "10px 18px", borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${actief ? VW_BLUE : VW_BORDER}`,
+                      background: actief ? VW_BLUE_L : "#fff",
+                      color: actief ? VW_BLUE : "#374151",
+                      fontWeight: actief ? 700 : 500, fontSize: 13, fontFamily: "inherit",
                     }}>
-                      <span style={{ fontSize: 20 }}>{icon}</span>
+                      {actief && <span style={{ fontSize: 11, fontWeight: 800, color: VW_BLUE }}>✓</span>}
                       {label}
-                      {actief && <span style={{ marginLeft: 4, fontSize: 16 }}>✓</span>}
                     </button>
                   );
                 })}
