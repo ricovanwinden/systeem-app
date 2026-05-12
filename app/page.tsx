@@ -17,7 +17,7 @@ interface BrandmeldData {
   laadspanningAccu1: string; laadspanningAccu2: string;
   restspanningAccu1: string; restspanningAccu2: string;
   geluidsdrukAchtergrond: string; geluidsdrukAlarm: string;
-  checklistItems: { vraag: string; status: string; opmerking: string }[];
+  checklistItems: { vraag: string; status: string; opmerking: string; type?: string; eenheid?: string; waarde?: string; linked?: string }[];
 }
 interface GasdetectieData {
   centraleType: string; noodstroomType: string; upsvermogen: string; belasting: string; backupUren: string;
@@ -42,10 +42,54 @@ function accuLeeftijd(datumStr: string) {
 }
 
 const defaultBrandmeldChecklist = [
-  "Reset sleutel HBM aanwezig?", "Handleiding aanwezig?",
-  "Weerstand van de lus gemeten?", "Systeem in rust achtergelaten?",
-  "Logboek bijgewerkt?", "Revisietekeningen aanwezig?",
-].map(v => ({ vraag: v, status: "???", opmerking: "" }));
+  { vraag: "8. Algemeen start: Is de BMI voorzien van de benodigde instructietekst met acties na reset brandalarm? Zo nee, aanbrengen met Dymo.", type: "vraag" },
+  { vraag: "9. Algemeen start: Is de ruimte waar de BMC zich bevindt aangeduid met een sticker 'brandmeldcentrale'?", type: "vraag" },
+  { vraag: "ONDERHOUD BMI volgens NEN2654-1 / 2", type: "header" },
+  { vraag: "11. Beheer: Is het dossier compleet? (PvE / Rapportage proefbrand / FM / Tekeningen / RvOpl / etc...)", type: "vraag" },
+  { vraag: "12. Beheer: Komt het type fabricaat / installatie overeen met de uitgangspunten in Syntess?", type: "vraag" },
+  { vraag: "13. Brandmeldcentrale: Controleer de tijd op de BMC, zet eventueel goed en vink onderhoudssticker af.", type: "vraag" },
+  { vraag: "15. Beheer: Is er een correcte registratie van de beheerstaken?", type: "vraag" },
+  { vraag: "16. Brandmeldcentrale: Kopie software BMC gemaakt?", type: "vraag" },
+  { vraag: "17. Brandmeldcentrale: Gebeurtenisgeheugen BMC gedownload?", type: "vraag" },
+  { vraag: "18. Brandmeldcentrale: Leg de lusweerstand(en) vast per detectielus (gemeten over de min).", type: "tekst", eenheid: "Ω" },
+  { vraag: "19. Prestatie eis: Wat is de prestatie eis voor onechte / ongewenste meldingen op basis van het aantal componenten?", type: "tekst", eenheid: "" },
+  { vraag: "20. Prestatie eis: Wat is het aantal onechte/ongewenste meldingen in het afgelopen jaar? Valt dit binnen de prestatie eis?", type: "tekst", eenheid: "" },
+  { vraag: "21. Prestatie eis: Bereken de systeembeschikbaarheid op basis van de registraties in het logboek. Valt dit binnen de prestatie eis?", type: "vraag" },
+  { vraag: "22. Automatische melders: Zijn de juiste type melders toegepast, voldoet de projectie (ruimten / >50cm wand / >30cm van obstakels / >1,5m luchtstroom)?", type: "vraag" },
+  { vraag: "23. Automatische melders: Zijn alle automatische melders gecontroleerd en functioneel?", type: "vraag" },
+  { vraag: "24. Automatische melders: Beoordeel de vervuilingsgraad; bij >75% vervuiling aanmerken als preventief te vervangen.", type: "vraag" },
+  { vraag: "25. Automatische melders: Zijn bij een aspiratiesysteem alle aanzuigopeningen gereinigd en zijn de aanzuiggaatjes verzinkt?", type: "vraag" },
+  { vraag: "26. Automatische melders: Zijn er afsluitbare clips gebruikt bij de montage van de aspiratiebuizen?", type: "vraag" },
+  { vraag: "27. Nevenindicatoren: Zijn de nevenindicatoren geplaatst bij de juiste toegangsdeuren en vanuit de verkeersruimte zichtbaar?", type: "vraag" },
+  { vraag: "28. Nevenindicatoren: Zijn de nevenindicatoren inclusief volgschakelingen getest en functioneel?", type: "vraag" },
+  { vraag: "29. Handbrandmelders: Voldoet de projectie (bij elke brandslanghaspel / nooduitgangen), juiste hoogte 0,9–1,5 m?", type: "vraag" },
+  { vraag: "30. Handbrandmelders: Zijn alle handbrandmelders gecontroleerd en functioneel?", type: "vraag" },
+  { vraag: "31. Plaats of controleer aanwezigheid sleutel HBM aan onderzijde BMC of in sleutelkluis.", type: "vraag" },
+  { vraag: "32. Brandmeldcentrale: Is de algehele status van de BMI in orde en zijn alle aansluitingen in orde?", type: "vraag" },
+  { vraag: "33. Brandmeldcentrale: Is de groepsindeling / zone indeling nog conform PvE?", type: "vraag" },
+  { vraag: "34. Brandmeldcentrale: Worden alle meldingen correct weergegeven (Alarm / Storing / Uitschakeling)?", type: "vraag" },
+  { vraag: "35. Brandalarmeringsapparatuur: Worden de juiste signalen doorgegeven aan de interne organisatie (zoemers / lampjes op bedienpanelen / nevenpanelen)?", type: "vraag" },
+  { vraag: "36. Energie voorziening Primair: Schakelt de BMC correct over bij uitschakeling van de primaire energie voorziening?", type: "vraag" },
+  { vraag: "37. Energie voorziening Secundair: Laadspanning van de accu's", type: "tekst", eenheid: "V", linked: "laadspanning" },
+  { vraag: "38. Energie voorziening Secundair: Accuspanning na minimaal 1 uur noodstroombedrijf", type: "tekst", eenheid: "V", linked: "restspanning" },
+  { vraag: "39. Energie voorziening Secundair: Ruststroom van de installatie", type: "tekst", eenheid: "mA", linked: "bmruststroom" },
+  { vraag: "40. Energie voorziening Secundair: Alarmstroom van de installatie", type: "tekst", eenheid: "mA", linked: "bmalarmstroom" },
+  { vraag: "41. Energie voorziening Secundair: Benodigde capaciteit accu's (12 uur noodstroom)", type: "tekst", eenheid: "Ah", linked: "bmcapaciteit" },
+  { vraag: "42. Energie voorziening Secundair: Voldoen de accu's nog tot de volgende onderhoudsbeurt? (< 4 jaar)", type: "vraag", linked: "bmaccuvoldoet" },
+  { vraag: "43. Brandweer- en Nevenpanelen: Worden bij brandalarm de juiste zones weergegeven en is de eerste automatisch brandmelding zichtbaar?", type: "vraag" },
+  { vraag: "44. Sturingen uit BMC: Doormelding brandmeldingen.", type: "vraag" },
+  { vraag: "45. Sturingen uit BMC: Doormelding storingsmeldingen.", type: "vraag" },
+  { vraag: "46. Sturingen uit BMC: Brandweeringang en flitslichten.", type: "vraag" },
+  { vraag: "47. Sturingen uit BMC: Voorziening voor brandscheidingen (kleefmagneten / vrijloopdrangers).", type: "vraag" },
+  { vraag: "48. Sturingen uit BMC: Brandwerende rolschermen dienen NIET gestuurd te worden bij een storing.", type: "vraag" },
+  { vraag: "49. Sturingen uit BMC: Rook- en Warmte afvoer installatie.", type: "vraag" },
+  { vraag: "50. Sturingen uit BMC: Overdruk installatie.", type: "vraag" },
+  { vraag: "51. Sturingen uit BMC: Autolaadvoorzieningen afgeschakeld bij brandmelding?", type: "vraag" },
+  { vraag: "52. Sturingen uit BMC: Ontruimingsalarm installatie.", type: "vraag" },
+  { vraag: "53. Sturingen uit BMC: Overigen namelijk:", type: "tekst", eenheid: "" },
+  { vraag: "54. Sturingen uit BMC: Worden de sturingen uitgevoerd conform het PvE / Functiematrix?", type: "vraag" },
+  { vraag: "56. Akoestische signaalgevers: Geluidsniveau achtergrondwaarde", type: "tekst", eenheid: "dB", linked: "achtergrond" },
+].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
 const defaultVentChecklist = [
   { vraag: "ONDERHOUD VENT", type: "header" },
@@ -614,13 +658,103 @@ export default function App() {
             </Card>
 
             <Card icon="✅" title="Checklist">
-              {bm.checklistItems.map((item, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", padding: "10px 14px", borderRadius: 10, background: i%2===0?"#f8fafc":"#fff", border: "1px solid #f1f5f9", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                  <StatusPill status={item.status} onChange={s => { const a=[...bm.checklistItems]; a[i]={...a[i],status:s}; setBm({...bm,checklistItems:a}); }} />
-                  <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setBm({...bm,checklistItems:a}); }} />
-                </div>
-              ))}
+              {bm.checklistItems.map((item, i) => {
+                if (item.type === "header") return (
+                  <div key={i} style={{ padding: "14px 14px 2px", marginTop: i>0?8:0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{item.vraag}</span>
+                    <div style={{ borderTop: "2px solid #e2e8f0", marginTop: 6 }} />
+                  </div>
+                );
+                const rowBg = { borderRadius: 10, border: "1px solid #f1f5f9", marginBottom: 6, padding: "10px 14px" };
+                const badge = (val: string, eenheid?: string) => (
+                  <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#0369a1" }}>{val}{eenheid ? " "+eenheid : ""}</span>
+                );
+                const link = <span style={{ fontSize: 11, color: "#94a3b8" }}>← berekening</span>;
+                if (item.linked === "laadspanning") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const }}>
+                      {bm.laadspanningAccu1 ? badge("Accu 1: "+bm.laadspanningAccu1, "V") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul brandmeld in</span>}
+                      {bm.laadspanningAccu2 && badge("Accu 2: "+bm.laadspanningAccu2, "V")}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "restspanning") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const }}>
+                      {bm.restspanningAccu1 ? badge("Accu 1: "+bm.restspanningAccu1, "V") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul brandmeld in</span>}
+                      {bm.restspanningAccu2 && badge("Accu 2: "+bm.restspanningAccu2, "V")}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "bmruststroom") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {bm.ruststroom ? badge(bm.ruststroom, "mA") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul brandmeld in</span>}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "bmalarmstroom") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {bm.alarmstroom ? badge(bm.alarmstroom, "mA") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul brandmeld in</span>}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "bmcapaciteit") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {bmBenodigd !== null ? badge(bmBenodigd.toFixed(1), "Ah") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul rust/alarmstroom in</span>}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "bmaccuvoldoet") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {bmLeeftijd === null
+                        ? <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul datum plaatsing in</span>
+                        : <span style={{ background: bmTeOud?"#fef2f2":"#f0fdf4", border: `1px solid ${bmTeOud?"#fecaca":"#bbf7d0"}`, borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: bmTeOud?"#dc2626":"#15803d" }}>{bmTeOud ? `Vervangen (${bmLeeftijd} jaar)` : `Goedgekeurd ✓ (${bmLeeftijd} jaar)`}</span>
+                      }
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.linked === "achtergrond") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {bm.geluidsdrukAchtergrond ? badge(bm.geluidsdrukAchtergrond, "dB") : <span style={{ fontSize: 11, color: "#94a3b8" }}>Vul brandmeld in</span>}
+                      {link}
+                    </div>
+                  </div>
+                );
+                if (item.type === "tekst") return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", width: 140}} value={item.waarde||""} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setBm({...bm,checklistItems:a}); }} />
+                      {item.eenheid && <span style={{ fontSize: 12, color: "#64748b", minWidth: 20 }}>{item.eenheid}</span>}
+                    </div>
+                  </div>
+                );
+                return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                    <StatusPill status={item.status} onChange={s => { const a=[...bm.checklistItems]; a[i]={...a[i],status:s}; setBm({...bm,checklistItems:a}); }} />
+                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setBm({...bm,checklistItems:a}); }} />
+                  </div>
+                );
+              })}
             </Card>
           </div>
         )}
