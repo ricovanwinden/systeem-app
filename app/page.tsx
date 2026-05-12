@@ -29,10 +29,12 @@ interface GasdetectieData {
 interface VentilatieRij {
   type: string; naam: string; breedte: string; hoogte: string; diameter: string;
   meting1: string; meting2: string; meting3: string; meting4: string; meting5: string;
+  gemeten?: string;
 }
 interface LogboekRij { garage: string; opmerking: string; storing: string; automelder: string; handmelder: string; }
 interface VentStroomRij { naam: string; stroom: string; }
 interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; }
+interface NotitieFoto { id: number; dataUrl: string; naam: string; }
 
 function berekenAccuBrandmeld(rust: number, alarm: number, uren: number) {
   return ((rust / 1000) * uren + (alarm / 1000) * 0.5) * 1.25;
@@ -355,6 +357,8 @@ export default function App() {
   const [ventStroom, setVentStroom] = useState<VentStroomData>(defaultVentStroom);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
+  const [notitieFotos, setNotitieFotos] = useState<NotitieFoto[]>([]);
+  const [fotoLightbox, setFotoLightbox] = useState<NotitieFoto | null>(null);
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
@@ -412,6 +416,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_fotos"); if (s) setNotitieFotos(JSON.parse(s));
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
   }, []);
@@ -424,6 +431,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
+  useEffect(() => { localStorage.setItem("werkbon_fotos", JSON.stringify(notitieFotos)); }, [notitieFotos]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -438,7 +446,7 @@ export default function App() {
       opdrachtgever: info.opdrachtgever,
       datum: info.datum,
       opgeslagenOp: new Date().toLocaleString("nl-NL"),
-      data: { info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen },
+      data: { info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen, notitieFotos },
     };
     const bijgewerkt = [nieuw, ...projecten].slice(0, 50);
     setProjecten(bijgewerkt);
@@ -451,6 +459,7 @@ export default function App() {
     if (!confirm(`Huidig project wordt vervangen door "${p.naam}". Doorgaan?`)) return;
     setInfo(p.data.info); setBm(p.data.bm); setGas(p.data.gas);
     setVentRijen(p.data.ventRijen); if (p.data.ventStroom) setVentStroom(p.data.ventStroom); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
+    if (p.data.notitieFotos) setNotitieFotos(p.data.notitieFotos);
     setToonProjecten(false);
     setTab("info");
   }
@@ -464,7 +473,7 @@ export default function App() {
   function downloadBestand() {
     const bestandsnaam = `werkbon-${info.opdrachtgever || "project"}-${info.datum || new Date().toISOString().slice(0, 10)}.json`
       .replace(/[^a-z0-9.\-_]/gi, "-");
-    const inhoud = JSON.stringify({ info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen }, null, 2);
+    const inhoud = JSON.stringify({ info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen, notitieFotos }, null, 2);
     const blob = new Blob([inhoud], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -484,6 +493,7 @@ export default function App() {
     setVentStroom(defaultVentStroom);
     setLogboek(defaultLogboek);
     setAantekeningen("");
+    setNotitieFotos([]);
     setWerkbonExtra([]);
     setWerkbonDoormel([]);
     setScannerKey(k => k + 1);
@@ -1072,11 +1082,19 @@ export default function App() {
                       <div key={m}><label style={L}>Meting {mi+1}</label><input style={F} type="number" step="0.01" value={rij[m]} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],[m]:e.target.value};setVentRijen(a);}}/></div>
                     ))}
                   </div>
+                  <div style={{ marginTop: 10 }}>
+                    <label style={L}>Gemeten op</label>
+                    <select style={{...F, width:"auto"}} value={rij.gemeten ?? ""} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],gemeten:e.target.value};setVentRijen(a);}}>
+                      <option value="">— kies meetpunt —</option>
+                      <option value="speedgate">Gemeten op de speedgate</option>
+                      <option value="rooster">Gemeten bij het rooster</option>
+                    </select>
+                  </div>
                   {gem!==null && (
                     <div style={{ display:"flex",gap:12,marginTop:16,flexWrap:"wrap" }}>
                       <StatCard label="Gem. windsnelheid" value={gem.toFixed(2)+" m/s"} />
                       {opp && <StatCard label="Oppervlak" value={opp.toFixed(3)+" m²"} />}
-                      {debiet && <StatCard label="Debiet" value={parseInt(debiet).toLocaleString()+" m³/h"} color="#06b6d4" />}
+                      {debiet && <StatCard label="Debiet" value={parseInt(debiet).toLocaleString()+" m³/h"} color="#06b6d4" sub={rij.gemeten === "speedgate" ? "Gemeten op speedgate" : rij.gemeten === "rooster" ? "Gemeten bij rooster" : undefined} />}
                     </div>
                   )}
                 </Card>
@@ -1221,6 +1239,68 @@ export default function App() {
                 </button>
               ))}
             </Card>
+            <Card icon="📷" title="Foto's">
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display:"inline-flex", alignItems:"center", gap:10, cursor:"pointer", background:"linear-gradient(135deg,#10b981,#059669)", color:"#fff", borderRadius:12, padding:"11px 20px", fontWeight:700, fontSize:14, boxShadow:"0 4px 12px rgba(16,185,129,0.3)" }}>
+                  📷 Foto toevoegen
+                  <input type="file" accept="image/*" multiple style={{ display:"none" }} onChange={async e => {
+                    const files = Array.from(e.target.files ?? []);
+                    if (!files.length) return;
+                    const nieuwefotos: NotitieFoto[] = [];
+                    for (const file of files) {
+                      const dataUrl: string = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const img = new Image();
+                          img.onload = () => {
+                            const MAX = 1200;
+                            let w = img.width, h = img.height;
+                            if (w > MAX || h > MAX) {
+                              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                              else { w = Math.round(w * MAX / h); h = MAX; }
+                            }
+                            const canvas = document.createElement("canvas");
+                            canvas.width = w; canvas.height = h;
+                            canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+                            resolve(canvas.toDataURL("image/jpeg", 0.75));
+                          };
+                          img.onerror = reject;
+                          img.src = reader.result as string;
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                      });
+                      nieuwefotos.push({ id: Date.now() + Math.random(), dataUrl, naam: file.name });
+                    }
+                    setNotitieFotos(f => [...f, ...nieuwefotos]);
+                    e.target.value = "";
+                  }} />
+                </label>
+              </div>
+              {notitieFotos.length === 0 ? (
+                <p style={{ color:"#94a3b8", fontSize:13, margin:0 }}>Nog geen foto&apos;s toegevoegd. Gebruik de knop hierboven om foto&apos;s te maken of te kiezen uit je bestanden.</p>
+              ) : (
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px, 1fr))", gap:10 }}>
+                  {notitieFotos.map(foto => (
+                    <div key={foto.id} style={{ position:"relative", borderRadius:10, overflow:"hidden", border:"2px solid #e2e8f0", aspectRatio:"1", background:"#f1f5f9" }}>
+                      <img src={foto.dataUrl} alt={foto.naam} onClick={() => setFotoLightbox(foto)}
+                        style={{ width:"100%", height:"100%", objectFit:"cover", cursor:"pointer", display:"block" }} />
+                      <button onClick={() => setNotitieFotos(f => f.filter(x => x.id !== foto.id))}
+                        style={{ position:"absolute", top:4, right:4, background:"rgba(0,0,0,0.55)", color:"#fff", border:"none", borderRadius:"50%", width:24, height:24, cursor:"pointer", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
+        {fotoLightbox && (
+          <div onClick={() => setFotoLightbox(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:9999, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+            <div onClick={e => e.stopPropagation()} style={{ position:"relative", maxWidth:"100%", maxHeight:"100%" }}>
+              <img src={fotoLightbox.dataUrl} alt={fotoLightbox.naam} style={{ maxWidth:"90vw", maxHeight:"85vh", borderRadius:12, objectFit:"contain", display:"block" }} />
+              <button onClick={() => setFotoLightbox(null)} style={{ position:"absolute", top:-14, right:-14, background:"#fff", border:"none", borderRadius:"50%", width:32, height:32, cursor:"pointer", fontSize:18, fontWeight:700, color:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.3)" }}>✕</button>
+              <p style={{ color:"#cbd5e1", fontSize:12, textAlign:"center", marginTop:8 }}>{fotoLightbox.naam}</p>
+            </div>
           </div>
         )}
 
