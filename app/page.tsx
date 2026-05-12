@@ -347,6 +347,7 @@ export default function App() {
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [opslaanMelding, setOpslaanMelding] = useState("");
+  const [kopieermeldingCode, setKopieermeldingCode] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -1244,6 +1245,31 @@ export default function App() {
                 <button key={t} onClick={()=>setAantekeningen(a=>a?a+"\n"+t:t)}
                   style={{ display:"block",width:"100%",textAlign:"left",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"11px 16px",marginBottom:8,cursor:"pointer",fontSize:13,color:"#374151",fontFamily:"inherit",transition:"background 0.15s" }}>
                   <span style={{ color:"#10b981",fontWeight:700,marginRight:8 }}>+</span>{t}
+                </button>
+              ))}
+            </Card>
+            <Card icon="🔑" title="Standaard installateurscodes — klik om te kopiëren">
+              {kopieermeldingCode && (
+                <div style={{ marginBottom:12, padding:"8px 14px", background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:8, fontSize:13, fontWeight:600, color:"#166534" }}>
+                  ✅ {kopieermeldingCode} gekopieerd
+                </div>
+              )}
+              {[
+                { merk: "Penta",           code: "7654" },
+                { merk: "Opperman",        code: "22767" },
+                { merk: "Opperman TGU KM3.6", code: "022767" },
+                { merk: "Opperman GWA",    code: "022767" },
+                { merk: "Siemens",         code: "3333" },
+                { merk: "Johnson",         code: "3333" },
+                { merk: "Honeywell",       code: "3333 / 9898" },
+              ].map(({ merk, code }) => (
+                <button key={merk+code} onClick={() => {
+                  navigator.clipboard.writeText(code).catch(() => {});
+                  setKopieermeldingCode(merk+" "+code);
+                  setTimeout(() => setKopieermeldingCode(""), 2000);
+                }} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%", textAlign:"left", background:"#f8fafc", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"11px 16px", marginBottom:8, cursor:"pointer", fontFamily:"inherit" }}>
+                  <span style={{ fontSize:13, color:"#374151", fontWeight:600 }}>{merk}</span>
+                  <span style={{ fontSize:15, fontWeight:800, color:"#6366f1", fontFamily:"monospace", letterSpacing:"0.05em" }}>{code}</span>
                 </button>
               ))}
             </Card>
