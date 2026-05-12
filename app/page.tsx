@@ -29,7 +29,7 @@ interface VentilatieRij {
   type: string; naam: string; breedte: string; hoogte: string; diameter: string;
   meting1: string; meting2: string; meting3: string; meting4: string; meting5: string;
 }
-interface LogboekRij { opmerking: string; storing: string; automelder: string; handmelder: string; }
+interface LogboekRij { garage: string; opmerking: string; storing: string; automelder: string; handmelder: string; }
 interface VentStroomRij { naam: string; stroom: string; }
 interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; }
 
@@ -337,7 +337,7 @@ const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom:
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
-const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ opmerking: "", storing: "", automelder: "", handmelder: "" }));
+const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ garage: "", opmerking: "", storing: "", automelder: "", handmelder: "" }));
 
 export default function App() {
   const [mounted, setMounted] = useState(false);
@@ -354,7 +354,6 @@ export default function App() {
   const [ventStroom, setVentStroom] = useState<VentStroomData>(defaultVentStroom);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
-  const [beheerGarage, setBeheerGarage] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
@@ -410,9 +409,6 @@ export default function App() {
       const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
     } catch {}
     try {
-      const s = localStorage.getItem("werkbon_beheergarage"); if (s) setBeheerGarage(s);
-    } catch {}
-    try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
   }, []);
@@ -425,7 +421,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
-  useEffect(() => { localStorage.setItem("werkbon_beheergarage", beheerGarage); }, [beheerGarage]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -486,7 +481,6 @@ export default function App() {
     setVentStroom(defaultVentStroom);
     setLogboek(defaultLogboek);
     setAantekeningen("");
-    setBeheerGarage("");
     setWerkbonExtra([]);
     setWerkbonDoormel([]);
     setScannerKey(k => k + 1);
@@ -1130,23 +1124,17 @@ export default function App() {
                 <h1 style={{ fontSize:24,fontWeight:800,color:"#0f172a",margin:0 }}>Beheer BMI</h1>
                 <p style={{ color:"#64748b",margin:"4px 0 0",fontSize:14 }}>Storings- en meldingsregistratie</p>
               </div>
-              <button onClick={()=>setLogboek([...logboek,{opmerking:"",storing:"",automelder:"",handmelder:""}])}
+              <button onClick={()=>setLogboek([...logboek,{garage:"",opmerking:"",storing:"",automelder:"",handmelder:""}])}
                 style={{ background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",color:"#fff",border:"none",borderRadius:12,padding:"10px 18px",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 4px 12px rgba(139,92,246,0.3)" }}>
                 + Rij
               </button>
             </div>
-            <Card icon="🏢" title="Locatie">
-              <div>
-                <label style={L}>Welke garage</label>
-                <input style={F} placeholder="bijv. Garage Noord, sectie B" value={beheerGarage} onChange={e => setBeheerGarage(e.target.value)} />
-              </div>
-            </Card>
             <Card>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                   <thead>
                     <tr>
-                      {["Storing","Auto melder","Handmelder","Opmerking",""].map(h=>(
+                      {["Garage","Storing","Auto melder","Handmelder","Opmerking",""].map(h=>(
                         <th key={h} style={{ padding:"10px 14px",textAlign:"left",background:"#f8fafc",color:"#64748b",fontWeight:700,fontSize:11,letterSpacing:"0.05em",textTransform:"uppercase" as const,borderBottom:"2px solid #e2e8f0" }}>{h}</th>
                       ))}
                     </tr>
@@ -1154,6 +1142,7 @@ export default function App() {
                   <tbody>
                     {logboek.map((rij,i)=>(
                       <tr key={i} style={{ borderBottom:"1px solid #f1f5f9" }}>
+                        <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. Garage Noord" value={rij.garage||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],garage:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:180,fontSize:12}} placeholder="bijv. storing voeding" value={rij.storing||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],storing:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. RA-01" value={rij.automelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],automelder:e.target.value};setLogboek(a);}}/></td>
                         <td style={{ padding:"8px 6px" }}><input style={{...F,minWidth:140,fontSize:12}} placeholder="bijv. HBM-05" value={rij.handmelder||""} onChange={e=>{const a=[...logboek];a[i]={...a[i],handmelder:e.target.value};setLogboek(a);}}/></td>
