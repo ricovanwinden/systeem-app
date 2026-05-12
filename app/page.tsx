@@ -30,6 +30,8 @@ interface VentilatieRij {
   meting1: string; meting2: string; meting3: string; meting4: string; meting5: string;
 }
 interface LogboekRij { datumUit: string; datumIn: string; aantalMelders: string; opmerking: string; }
+interface VentStroomRij { naam: string; stroom: string; }
+interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; }
 
 function berekenAccuBrandmeld(rust: number, alarm: number, uren: number) {
   return ((rust / 1000) * uren + (alarm / 1000) * 0.5) * 1.25;
@@ -287,6 +289,7 @@ const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnu
 const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", checklistItems: defaultBrandmeldChecklist };
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
+const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SDV1", stroom: "" }] };
 const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ datumUit: "", datumIn: "", aantalMelders: "", opmerking: "" }));
 
 export default function App() {
@@ -301,6 +304,7 @@ export default function App() {
   const [gas, setGas] = useState<GasdetectieData>(defaultGas);
   const [ventRijen, setVentRijen] = useState<VentilatieRij[]>(defaultVentRijen);
   const [ventChecklist, setVentChecklist] = useState<{vraag:string;status:string;opmerking:string;type?:string;eenheid?:string;waarde?:string}[]>(defaultVentChecklist);
+  const [ventStroom, setVentStroom] = useState<VentStroomData>(defaultVentStroom);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
   const [aantekeningen, setAantekeningen] = useState("");
   const [projecten, setProjecten] = useState<any[]>([]);
@@ -326,6 +330,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_ventcl"); if (s) setVentChecklist(JSON.parse(s));
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_ventstroom"); if (s) setVentStroom(JSON.parse(s));
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_logboek"); if (s) setLogboek(JSON.parse(s));
     } catch {}
     try {
@@ -341,6 +348,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_gas", JSON.stringify(gas)); }, [gas]);
   useEffect(() => { localStorage.setItem("werkbon_vent", JSON.stringify(ventRijen)); }, [ventRijen]);
   useEffect(() => { localStorage.setItem("werkbon_ventcl", JSON.stringify(ventChecklist)); }, [ventChecklist]);
+  useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
 
@@ -357,7 +365,7 @@ export default function App() {
       opdrachtgever: info.opdrachtgever,
       datum: info.datum,
       opgeslagenOp: new Date().toLocaleString("nl-NL"),
-      data: { info, bm, gas, ventRijen, logboek, aantekeningen },
+      data: { info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen },
     };
     const bijgewerkt = [nieuw, ...projecten].slice(0, 50);
     setProjecten(bijgewerkt);
@@ -369,7 +377,7 @@ export default function App() {
   function laadProject(p: any) {
     if (!confirm(`Huidig project wordt vervangen door "${p.naam}". Doorgaan?`)) return;
     setInfo(p.data.info); setBm(p.data.bm); setGas(p.data.gas);
-    setVentRijen(p.data.ventRijen); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
+    setVentRijen(p.data.ventRijen); if (p.data.ventStroom) setVentStroom(p.data.ventStroom); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
     setToonProjecten(false);
     setTab("info");
   }
@@ -383,7 +391,7 @@ export default function App() {
   function downloadBestand() {
     const bestandsnaam = `werkbon-${info.opdrachtgever || "project"}-${info.datum || new Date().toISOString().slice(0, 10)}.json`
       .replace(/[^a-z0-9.\-_]/gi, "-");
-    const inhoud = JSON.stringify({ info, bm, gas, ventRijen, logboek, aantekeningen }, null, 2);
+    const inhoud = JSON.stringify({ info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen }, null, 2);
     const blob = new Blob([inhoud], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -400,6 +408,7 @@ export default function App() {
     setGas(defaultGas);
     setVentRijen(defaultVentRijen);
     setVentChecklist(defaultVentChecklist);
+    setVentStroom(defaultVentStroom);
     setLogboek(defaultLogboek);
     setAantekeningen("");
     setWerkbonExtra([]);
@@ -757,6 +766,86 @@ export default function App() {
                 + Ventilator
               </button>
             </div>
+            <Card icon="⚡" title="Stroommetingen">
+              {/* Regelkast */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 8 }}>Regelkast</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={L}>Dagbedrijf (A)</label>
+                    <input style={F} type="number" step="0.01" placeholder="bijv. 2.4" value={ventStroom.regelkastDag} onChange={e => setVentStroom({...ventStroom, regelkastDag: e.target.value})} />
+                  </div>
+                  <div>
+                    <label style={L}>Vollast (A)</label>
+                    <input style={F} type="number" step="0.01" placeholder="bijv. 6.8" value={ventStroom.regelkastVollast} onChange={e => setVentStroom({...ventStroom, regelkastVollast: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+              {/* Afvoerventilatoren */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>Afvoerventilatoren</div>
+                  {ventStroom.afvoer.length < 10 && (
+                    <button onClick={() => setVentStroom({...ventStroom, afvoer: [...ventStroom.afvoer, { naam: `AV${ventStroom.afvoer.length+1}`, stroom: "" }]})}
+                      style={{ background: "#f0f9ff", color: "#0369a1", border: "1.5px solid #bae6fd", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                      + Toevoegen
+                    </button>
+                  )}
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        {["Naam","Stroommeting (A)",""].map(h => (
+                          <th key={h} style={{ padding: "8px 12px", textAlign: "left", background: "#f8fafc", color: "#64748b", fontWeight: 700, fontSize: 11, letterSpacing: "0.05em", textTransform: "uppercase" as const, borderBottom: "2px solid #e2e8f0" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ventStroom.afvoer.map((r, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "6px 8px" }}><input style={{...F, minWidth: 80, fontSize: 12}} value={r.naam} onChange={e => { const a=[...ventStroom.afvoer]; a[i]={...a[i],naam:e.target.value}; setVentStroom({...ventStroom,afvoer:a}); }} /></td>
+                          <td style={{ padding: "6px 8px" }}><input style={{...F, minWidth: 100, fontSize: 12}} type="number" step="0.01" placeholder="A" value={r.stroom} onChange={e => { const a=[...ventStroom.afvoer]; a[i]={...a[i],stroom:e.target.value}; setVentStroom({...ventStroom,afvoer:a}); }} /></td>
+                          <td style={{ padding: "6px 8px" }}>{ventStroom.afvoer.length > 1 && <button onClick={() => setVentStroom({...ventStroom, afvoer: ventStroom.afvoer.filter((_,j)=>j!==i)})} style={{ background: "#fef2f2", color: "#991b1b", border: "1.5px solid #fca5a5", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>✕</button>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {/* Stuwdrukventilatoren */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>Stuwdrukventilatoren</div>
+                  {ventStroom.stuwdruk.length < 25 && (
+                    <button onClick={() => setVentStroom({...ventStroom, stuwdruk: [...ventStroom.stuwdruk, { naam: `SDV${ventStroom.stuwdruk.length+1}`, stroom: "" }]})}
+                      style={{ background: "#f0f9ff", color: "#0369a1", border: "1.5px solid #bae6fd", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                      + Toevoegen
+                    </button>
+                  )}
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        {["Naam","Stroommeting (A)",""].map(h => (
+                          <th key={h} style={{ padding: "8px 12px", textAlign: "left", background: "#f8fafc", color: "#64748b", fontWeight: 700, fontSize: 11, letterSpacing: "0.05em", textTransform: "uppercase" as const, borderBottom: "2px solid #e2e8f0" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ventStroom.stuwdruk.map((r, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "6px 8px" }}><input style={{...F, minWidth: 80, fontSize: 12}} value={r.naam} onChange={e => { const a=[...ventStroom.stuwdruk]; a[i]={...a[i],naam:e.target.value}; setVentStroom({...ventStroom,stuwdruk:a}); }} /></td>
+                          <td style={{ padding: "6px 8px" }}><input style={{...F, minWidth: 100, fontSize: 12}} type="number" step="0.01" placeholder="A" value={r.stroom} onChange={e => { const a=[...ventStroom.stuwdruk]; a[i]={...a[i],stroom:e.target.value}; setVentStroom({...ventStroom,stuwdruk:a}); }} /></td>
+                          <td style={{ padding: "6px 8px" }}>{ventStroom.stuwdruk.length > 1 && <button onClick={() => setVentStroom({...ventStroom, stuwdruk: ventStroom.stuwdruk.filter((_,j)=>j!==i)})} style={{ background: "#fef2f2", color: "#991b1b", border: "1.5px solid #fca5a5", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>✕</button>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Card>
             {ventRijen.map((rij, i) => {
               const metingen = [rij.meting1,rij.meting2,rij.meting3,rij.meting4,rij.meting5].map(m=>parseFloat(m)).filter(m=>!isNaN(m));
               const gem = metingen.length ? metingen.reduce((a,b)=>a+b,0)/metingen.length : null;
