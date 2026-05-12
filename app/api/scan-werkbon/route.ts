@@ -47,7 +47,7 @@ Het JSON object moet deze velden bevatten:
   "meldingen": ["tekst van de melding"]
 }
 
-Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie zoals IP-adres, poort, accountnummer, klantnummer, alarmcentrale, meldkamer, doormelding, SIA, CID, polling, receiver, transmitter, AMS, telefoonnummer doormelding, etc.
+Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie van alarmsystemen. Denk aan: OMS aansluitnummer, SECONTS aansluitnummer, RMS aansluitnummer, BOLDNET aansluitnummer, en andere alarmcentrale-verbindingsgegevens zoals IP-adres, poort, accountnummer, klantnummer, meldkamer, SIA, CID, polling, receiver, transmitter, telefoonnummer doormelding. Sla GEEN financiële gegevens op zoals IBAN, BTW-nummer of bankrekeningnummers.
 
 Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc.
 

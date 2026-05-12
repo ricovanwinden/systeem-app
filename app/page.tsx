@@ -139,7 +139,7 @@ const defaultGasChecklist = [
   { vraag: "45. Akoestische signaalgevers: Geluidsniveau 3e alarm met slowwhoops", type: "tekst", eenheid: "dB", linked: "gasDbMet" },
 ].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
-function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void }) {
+function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void; onPreview?: (dataUrl: string) => void }) {
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -180,6 +180,7 @@ function WerkbonScanner({ onResult, onExtraData }: { onResult: (data: any) => vo
       });
 
       setPreview(dataUrl);
+      onPreview?.(dataUrl);
       const base64 = dataUrl.split(",")[1];
 
       const response = await fetch("/api/scan-werkbon", {
@@ -363,6 +364,7 @@ export default function App() {
   const [toonProjecten, setToonProjecten] = useState(false);
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
   const [werkbonDoormel, setWerkbonDoormel] = useState<{ label: string; waarde: string }[]>([]);
+  const [werkbonScanPreview, setWerkbonScanPreview] = useState<string | null>(null);
 
   // Laad opgeslagen gegevens na hydration (localStorage alleen beschikbaar in browser)
   useEffect(() => {
@@ -419,6 +421,9 @@ export default function App() {
       const s = localStorage.getItem("werkbon_fotos"); if (s) setNotitieFotos(JSON.parse(s));
     } catch {}
     try {
+      const s = localStorage.getItem("werkbon_scan_preview"); if (s) setWerkbonScanPreview(s);
+    } catch {}
+    try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
   }, []);
@@ -432,6 +437,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
   useEffect(() => { localStorage.setItem("werkbon_fotos", JSON.stringify(notitieFotos)); }, [notitieFotos]);
+  useEffect(() => { if (werkbonScanPreview) localStorage.setItem("werkbon_scan_preview", werkbonScanPreview); else localStorage.removeItem("werkbon_scan_preview"); }, [werkbonScanPreview]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -494,6 +500,7 @@ export default function App() {
     setLogboek(defaultLogboek);
     setAantekeningen("");
     setNotitieFotos([]);
+    setWerkbonScanPreview(null);
     setWerkbonExtra([]);
     setWerkbonDoormel([]);
     setScannerKey(k => k + 1);
@@ -597,6 +604,7 @@ export default function App() {
                 key={scannerKey}
                 onResult={(data: any) => setInfo(prev => ({ ...prev, ...data }))}
                 onExtraData={(extra, doormel) => { setWerkbonExtra(extra); setWerkbonDoormel(doormel); }}
+                onPreview={(dataUrl) => setWerkbonScanPreview(dataUrl)}
               />
             </Card>
 
@@ -1345,6 +1353,11 @@ export default function App() {
                   </Card>
                 )}
               </>
+            )}
+            {werkbonScanPreview && (
+              <Card icon="🖼️" title="Gescande werkbon">
+                <img src={werkbonScanPreview} alt="werkbon scan" style={{ width: "100%", borderRadius: 10, display: "block", objectFit: "contain" }} />
+              </Card>
             )}
           </div>
         )}
