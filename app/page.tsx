@@ -1297,31 +1297,6 @@ export default function App() {
                 </button>
               ))}
             </Card>
-            <Card icon="🔑" title="Standaard installateurscodes — klik om te kopiëren">
-              {kopieermeldingCode && (
-                <div style={{ marginBottom:12, padding:"8px 14px", background:"#f0fdf4", border:"1.5px solid #86efac", borderRadius:8, fontSize:13, fontWeight:600, color:"#166534" }}>
-                  ✅ {kopieermeldingCode} gekopieerd
-                </div>
-              )}
-              {[
-                { merk: "Penta",           code: "7654" },
-                { merk: "Opperman",        code: "22767" },
-                { merk: "Opperman TGU KM3.6", code: "022767" },
-                { merk: "Opperman GWA",    code: "022767" },
-                { merk: "Siemens",         code: "3333" },
-                { merk: "Johnson",         code: "3333" },
-                { merk: "Honeywell",       code: "3333 / 9898" },
-              ].map(({ merk, code }) => (
-                <button key={merk+code} onClick={() => {
-                  navigator.clipboard.writeText(code).catch(() => {});
-                  setKopieermeldingCode(merk+" "+code);
-                  setTimeout(() => setKopieermeldingCode(""), 2000);
-                }} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%", textAlign:"left", background:"#f8fafc", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"11px 16px", marginBottom:8, cursor:"pointer", fontFamily:"inherit" }}>
-                  <span style={{ fontSize:13, color:"#374151", fontWeight:600 }}>{merk}</span>
-                  <span style={{ fontSize:15, fontWeight:800, color:"#6366f1", fontFamily:"monospace", letterSpacing:"0.05em" }}>{code}</span>
-                </button>
-              ))}
-            </Card>
             <Card icon="📷" title="Foto's">
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display:"inline-flex", alignItems:"center", gap:10, cursor:"pointer", background:"linear-gradient(135deg,#10b981,#059669)", color:"#fff", borderRadius:12, padding:"11px 20px", fontWeight:700, fontSize:14, boxShadow:"0 4px 12px rgba(16,185,129,0.3)" }}>
