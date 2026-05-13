@@ -382,7 +382,7 @@ const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom:
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", geluidsdrukAchtergrond: "", geluidsdrukAlarmZonder: "", geluidsdrukAlarmMet: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
-const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ garage: "", opmerking: "", storing: "", automelder: "", handmelder: "" }));
+const defaultLogboek: LogboekRij[] = [{ garage: "", opmerking: "", storing: "", automelder: "", handmelder: "" }];
 
 export default function App() {
   const [mounted, setMounted] = useState(false);
@@ -401,6 +401,7 @@ export default function App() {
   const [ventChecklist, setVentChecklist] = useState<{vraag:string;status:string;opmerking:string;type?:string;eenheid?:string;waarde?:string}[]>(defaultVentChecklist);
   const [ventStroom, setVentStroom] = useState<VentStroomData>(defaultVentStroom);
   const [logboek, setLogboek] = useState<LogboekRij[]>(defaultLogboek);
+  const [afmeld, setAfmeld] = useState({ meldkamer: "", afgemeldOp: "", refAfmelding: "", aangemeldOp: "", refAanmelding: "" });
   const [aantekeningen, setAantekeningen] = useState("");
   const [notitieFotos, setNotitieFotos] = useState<NotitieFoto[]>([]);
   const [fotoLightbox, setFotoLightbox] = useState<NotitieFoto | null>(null);
@@ -458,6 +459,7 @@ export default function App() {
     } catch {}
     try {
       const s = localStorage.getItem("werkbon_logboek"); if (s) setLogboek(JSON.parse(s));
+      const sa = localStorage.getItem("werkbon_afmeld"); if (sa) setAfmeld(JSON.parse(sa));
     } catch {}
     try {
       const s = localStorage.getItem("werkbon_aantekeningen"); if (s) setAantekeningen(s);
@@ -503,6 +505,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_ventcl", JSON.stringify(ventChecklist)); }, [ventChecklist]);
   useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
+  useEffect(() => { localStorage.setItem("werkbon_afmeld", JSON.stringify(afmeld)); }, [afmeld]);
   useEffect(() => { localStorage.setItem("werkbon_aantekeningen", aantekeningen); }, [aantekeningen]);
   useEffect(() => { localStorage.setItem("werkbon_fotos", JSON.stringify(notitieFotos)); }, [notitieFotos]);
   useEffect(() => { if (werkbonScanPreview) localStorage.setItem("werkbon_scan_preview", werkbonScanPreview); else localStorage.removeItem("werkbon_scan_preview"); }, [werkbonScanPreview]);
@@ -567,6 +570,7 @@ export default function App() {
     setVentChecklist(defaultVentChecklist);
     setVentStroom(defaultVentStroom);
     setLogboek(defaultLogboek);
+    setAfmeld({ meldkamer: "", afgemeldOp: "", refAfmelding: "", aangemeldOp: "", refAanmelding: "" });
     setAantekeningen("");
     setNotitieFotos([]);
     setWerkbonScanPreview(null);
@@ -1303,7 +1307,7 @@ export default function App() {
                 + Rij
               </button>
             </div>
-            <Card>
+            <Card icon="🔢" title="Aansluitnummer">
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
                   <thead>
@@ -1326,6 +1330,16 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </Card>
+
+            <Card icon="📋" title="Afmeldgegevens">
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div><label style={L}>Meldkamer</label><input style={F} placeholder="bijv. Securitas, PAC" value={afmeld.meldkamer} onChange={e=>setAfmeld(p=>({...p,meldkamer:e.target.value}))}/></div>
+                <div><label style={L}>Referentie afmelding</label><input style={F} placeholder="referentienummer" value={afmeld.refAfmelding} onChange={e=>setAfmeld(p=>({...p,refAfmelding:e.target.value}))}/></div>
+                <div><label style={L}>Tijdstip afgemeld</label><input style={F} type="time" value={afmeld.afgemeldOp} onChange={e=>setAfmeld(p=>({...p,afgemeldOp:e.target.value}))}/></div>
+                <div><label style={L}>Tijdstip aangemeld</label><input style={F} type="time" value={afmeld.aangemeldOp} onChange={e=>setAfmeld(p=>({...p,aangemeldOp:e.target.value}))}/></div>
+                <div style={{ gridColumn:"1/-1" }}><label style={L}>Referentie aanmelding</label><input style={F} placeholder="referentienummer" value={afmeld.refAanmelding} onChange={e=>setAfmeld(p=>({...p,refAanmelding:e.target.value}))}/></div>
               </div>
             </Card>
           </div>
