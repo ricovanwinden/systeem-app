@@ -139,7 +139,7 @@ const defaultGasChecklist = [
   { vraag: "45. Akoestische signaalgevers: Geluidsniveau 3e alarm met slowwhoops", type: "tekst", eenheid: "dB", linked: "gasDbMet" },
 ].map(v => ({ status: "???", opmerking: "", waarde: "", ...v }));
 
-function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void; onPreview?: (dataUrl: string) => void }) {
+function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onResult: (data: any) => void; onExtraData: (extra: any[], doormel: any[]) => void; onPreview?: (dataUrl: string) => void; onSystemen?: (systemen: string[]) => void }) {
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -191,9 +191,35 @@ function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data:
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Onbekende fout");
-      const { extraGegevens: extra = [], doormeldgegevens: doormel = [], waarschuwingen: warns = [], meldingen: meld = [], ...hoofdVelden } = data;
+      const { extraGegevens: extra = [], doormeldgegevens: doormel = [], waarschuwingen: warns = [], meldingen: meld = [], systeemCode = "", ...hoofdVelden } = data;
       onResult(hoofdVelden);
       onExtraData(extra, doormel);
+      let systeemMelding = "";
+      if (systeemCode) {
+        const code = (systeemCode as string).toUpperCase().trim();
+        const MAPPING: Record<string, string[]> = {
+          "O-G": ["gasdetectie"],
+          "O-B": ["brandmeld"],
+          "O-R": ["ventilatie"],
+          "O-O": ["ventilatie"],
+          "O-V": ["ventilatie"],
+          "O-VB": ["ventilatie", "brandmeld"],
+          "O-VG": ["ventilatie", "gasdetectie"],
+          "O-VGB": ["ventilatie", "gasdetectie", "brandmeld"],
+          "O-RIVG": [],
+          "BEHEER BMI": ["logboek"],
+          "RWA": ["logboek"],
+        };
+        const systemen = MAPPING[code] ?? Object.entries(MAPPING).sort((a, b) => b[0].length - a[0].length).find(([k]) => code.includes(k))?.[1];
+        if (systemen !== undefined) {
+          onSystemen?.(systemen);
+          systeemMelding = systemen.length > 0 ? ` Tabbladen: ${systemen.join(", ")}.` : ` Code ${code} = reinigen, geen tabbladen.`;
+        } else {
+          systeemMelding = ` Code "${systeemCode}" niet herkend.`;
+        }
+      } else {
+        systeemMelding = " Geen systeemcode gevonden.";
+      }
       setWaarschuwingen(warns);
       setMeldingen(meld);
       const wachtrij = [
@@ -202,7 +228,7 @@ function WerkbonScanner({ onResult, onExtraData, onPreview }: { onResult: (data:
       ];
       setPopupWachtrij(wachtrij);
       if (wachtrij.length > 0) setActivePopup(wachtrij[0]);
-      setMelding("✅ Gegevens ingevuld! Ga naar het tabblad 'Werkbon' voor alle overige gegevens.");
+      setMelding(`✅ Gegevens ingevuld!${systeemMelding} Ga naar het tabblad 'Werkbon' voor alle overige gegevens.`);
     } catch (err: any) {
       setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
     }
@@ -359,6 +385,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("info");
   const [opslaanMelding, setOpslaanMelding] = useState("");
   const [kopieermeldingCode, setKopieermeldingCode] = useState("");
+  const [spellingBezig, setSpellingBezig] = useState(false);
   const [toonCodes, setToonCodes] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -624,9 +651,15 @@ export default function App() {
             <Card icon="📷" title="Werkbon scannen — upload een foto">
               <WerkbonScanner
                 key={scannerKey}
-                onResult={(data: any) => setInfo(prev => ({ ...prev, ...data }))}
+                onResult={(data: any) => {
+                  setInfo(prev => ({ ...prev, ...data }));
+                  if (data.projectnaam) {
+                    setLogboek(prev => prev.map(rij => rij.garage === "" ? { ...rij, garage: data.projectnaam } : rij));
+                  }
+                }}
                 onExtraData={(extra, doormel) => { setWerkbonExtra(extra); setWerkbonDoormel(doormel); }}
                 onPreview={(dataUrl) => setWerkbonScanPreview(dataUrl)}
+                onSystemen={(systemen) => { if (systemen.length > 0) setActieveTabs(systemen); }}
               />
             </Card>
 
@@ -1135,7 +1168,7 @@ export default function App() {
                   <div style={G3}>
                     <div><label style={L}>Breedte (m)</label><input style={F} type="number" step="0.01" value={rij.breedte} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],breedte:e.target.value};setVentRijen(a);}}/></div>
                     <div><label style={L}>Hoogte (m)</label><input style={F} type="number" step="0.01" value={rij.hoogte} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],hoogte:e.target.value};setVentRijen(a);}}/></div>
-                    <div><label style={L}>Diameter (m)</label><input style={F} type="number" step="0.01" value={rij.diameter} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],diameter:e.target.value};setVentRijen(a);}}/></div>
+                    {(()=>{const b=parseFloat(rij.breedte),h=parseFloat(rij.hoogte);const calc=(b>0&&h>0)?(1.3*Math.pow(b*h,0.625)/Math.pow(b+h,0.25)).toFixed(3):"";return(<div><label style={L}>Diameter (m){calc&&<span style={{fontSize:11,color:"#0099a8",marginLeft:6}}>berekend</span>}</label><input style={F} type="number" step="0.001" value={calc||rij.diameter} readOnly={!!calc} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],diameter:e.target.value};setVentRijen(a);}}/></div>);})()}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginTop: 12 }}>
                     {(["meting1","meting2","meting3","meting4","meting5"] as const).map((m,mi)=>(
@@ -1284,6 +1317,20 @@ export default function App() {
               <textarea value={aantekeningen} onChange={e=>setAantekeningen(e.target.value)}
                 placeholder={"Schrijf hier je aantekeningen, bevindingen en aanbevelingen..."}
                 style={{...F, minHeight:300, resize:"vertical" as const, lineHeight:1.7, fontFamily:"inherit"}} />
+              <button
+                disabled={spellingBezig || !aantekeningen.trim()}
+                onClick={async () => {
+                  setSpellingBezig(true);
+                  try {
+                    const r = await fetch("/api/spelling", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ tekst: aantekeningen }) });
+                    const d = await r.json();
+                    if (d.tekst) setAantekeningen(d.tekst);
+                  } catch {}
+                  setSpellingBezig(false);
+                }}
+                style={{ marginTop:10, padding:"8px 18px", borderRadius:8, border:"1.5px solid #e2e8f0", background: spellingBezig?"#f3f4f6":"#fff", color: spellingBezig?"#9ca3af":"#374151", cursor: spellingBezig||!aantekeningen.trim()?"not-allowed":"pointer", fontSize:13, fontWeight:600 }}>
+                {spellingBezig ? "Bezig..." : "✏️ Pas spelling aan"}
+              </button>
             </Card>
             <Card icon="📝" title="Standaardteksten — klik om toe te voegen">
               {[

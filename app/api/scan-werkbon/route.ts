@@ -37,6 +37,7 @@ Het JSON object moet deze velden bevatten:
   "datum": "datum in YYYY-MM-DD formaat",
   "monteur": "naam van de monteur of uitvoerder",
   "werkzaamheden": "type werkzaamheden",
+  "systeemCode": "de exacte systeemcode zoals gevonden op de werkbon, bijv. O-VG of O-VGB of beheer bmi",
   "doormeldgegevens": [
     { "label": "veldnaam", "waarde": "waarde" }
   ],
@@ -46,6 +47,8 @@ Het JSON object moet deze velden bevatten:
   "waarschuwingen": ["tekst van de waarschuwing"],
   "meldingen": ["tekst van de melding"]
 }
+
+Voor "systeemCode": op de werkbon staat bovenaan altijd een regel zoals "Onderhoud O-VG" of "Onderhoud O-VGB" of "Onderhoud O-B" etc. Geef ALLEEN het gedeelte na "Onderhoud" terug, dus enkel de code zelf zoals "O-VG" of "O-VGB". Andere mogelijke waarden zijn: O-G, O-B, O-R, O-O, O-V, O-VB, O-VG, O-VGB, O-RIVG, beheer bmi, rwa. Als er geen code staat, geef dan "".
 
 Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie van alarmsystemen. Denk aan: OMS aansluitnummer, SECONTS aansluitnummer, RMS aansluitnummer, BOLDNET aansluitnummer, en andere alarmcentrale-verbindingsgegevens zoals IP-adres, poort, accountnummer, klantnummer, meldkamer, SIA, CID, polling, receiver, transmitter, telefoonnummer doormelding. Sla GEEN financiële gegevens op zoals IBAN, BTW-nummer of bankrekeningnummers.
 
