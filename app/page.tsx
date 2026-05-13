@@ -155,28 +155,32 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
     setMelding("Werkbon wordt gelezen...");
 
     try {
-      // Zet altijd om naar JPEG via canvas — werkt met HEIC, PNG, WebP, etc.
+      if (file.type === "image/heic" || file.type === "image/heif" || file.name.toLowerCase().endsWith(".heic") || file.name.toLowerCase().endsWith(".heif")) {
+        throw new Error("HEIC-formaat wordt niet ondersteund. Zet je camera-instelling op JPEG, of maak een screenshot in plaats van een foto.");
+      }
+
       const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => {
-            const MAX = 1600;
-            let w = img.width, h = img.height;
-            if (w > MAX || h > MAX) {
-              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-              else { w = Math.round(w * MAX / h); h = MAX; }
-            }
-            const canvas = document.createElement("canvas");
-            canvas.width = w; canvas.height = h;
-            canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL("image/jpeg", 0.85));
-          };
-          img.onerror = reject;
-          img.src = reader.result as string;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const MAX = 1200;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+          let result = canvas.toDataURL("image/jpeg", 0.80);
+          // Als de afbeelding nog te groot is, verder comprimeren
+          if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
+          if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
+          resolve(result);
         };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Afbeelding kon niet worden geladen. Probeer een andere foto of screenshot.")); };
+        img.src = url;
       });
 
       setPreview(dataUrl);
@@ -230,7 +234,7 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
       if (wachtrij.length > 0) setActivePopup(wachtrij[0]);
       setMelding(`✅ Gegevens ingevuld!${systeemMelding} Ga naar het tabblad 'Werkbon' voor alle overige gegevens.`);
     } catch (err: any) {
-      setMelding(`❌ Kon werkbon niet lezen: ${err.message ?? "Vul handmatig in."}`);
+      setMelding(`❌ ${err?.message ?? String(err) ?? "Onbekende fout — vul handmatig in."}`);
     }
     setBezig(false);
   }
@@ -476,6 +480,26 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_bm", JSON.stringify(bm)); }, [bm]);
   useEffect(() => { localStorage.setItem("werkbon_gas", JSON.stringify(gas)); }, [gas]);
   useEffect(() => { localStorage.setItem("werkbon_vent", JSON.stringify(ventRijen)); }, [ventRijen]);
+  useEffect(() => {
+    let totaal = 0;
+    for (const rij of ventRijen) {
+      const metingen = [rij.meting1,rij.meting2,rij.meting3,rij.meting4,rij.meting5].map(Number).filter(v=>!isNaN(v)&&v!==0);
+      if (!metingen.length) continue;
+      const gem = metingen.reduce((a,b)=>a+b,0)/metingen.length;
+      const b=parseFloat(rij.breedte),h=parseFloat(rij.hoogte);
+      const diam = (b>0&&h>0) ? Math.sqrt(b*b+h*h) : parseFloat(rij.diameter);
+      if (!diam||isNaN(diam)) continue;
+      const opp = Math.PI*Math.pow(diam/2,2);
+      totaal += gem*opp*3600;
+    }
+    if (totaal>0) {
+      setVentChecklist(prev => {
+        const idx = prev.findIndex(v=>v.vraag.startsWith("18."));
+        if (idx===-1) return prev;
+        const a=[...prev];a[idx]={...a[idx],waarde:Math.round(totaal).toString()};return a;
+      });
+    }
+  }, [ventRijen]);
   useEffect(() => { localStorage.setItem("werkbon_ventcl", JSON.stringify(ventChecklist)); }, [ventChecklist]);
   useEffect(() => { localStorage.setItem("werkbon_ventstroom", JSON.stringify(ventStroom)); }, [ventStroom]);
   useEffect(() => { localStorage.setItem("werkbon_logboek", JSON.stringify(logboek)); }, [logboek]);
@@ -1168,7 +1192,7 @@ export default function App() {
                   <div style={G3}>
                     <div><label style={L}>Breedte (m)</label><input style={F} type="number" step="0.01" value={rij.breedte} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],breedte:e.target.value};setVentRijen(a);}}/></div>
                     <div><label style={L}>Hoogte (m)</label><input style={F} type="number" step="0.01" value={rij.hoogte} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],hoogte:e.target.value};setVentRijen(a);}}/></div>
-                    {(()=>{const b=parseFloat(rij.breedte),h=parseFloat(rij.hoogte);const calc=(b>0&&h>0)?(1.3*Math.pow(b*h,0.625)/Math.pow(b+h,0.25)).toFixed(3):"";return(<div><label style={L}>Diameter (m){calc&&<span style={{fontSize:11,color:"#0099a8",marginLeft:6}}>berekend</span>}</label><input style={F} type="number" step="0.001" value={calc||rij.diameter} readOnly={!!calc} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],diameter:e.target.value};setVentRijen(a);}}/></div>);})()}
+                    {(()=>{const b=parseFloat(rij.breedte),h=parseFloat(rij.hoogte);const calc=(b>0&&h>0)?Math.sqrt(b*b+h*h).toFixed(3):"";return(<div><label style={L}>Diameter (m){calc&&<span style={{fontSize:11,color:"#0099a8",marginLeft:6}}>berekend</span>}</label><input style={F} type="number" step="0.001" value={calc||rij.diameter} readOnly={!!calc} onChange={e=>{const a=[...ventRijen];a[i]={...a[i],diameter:e.target.value};setVentRijen(a);}}/></div>);})()}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginTop: 12 }}>
                     {(["meting1","meting2","meting3","meting4","meting5"] as const).map((m,mi)=>(
