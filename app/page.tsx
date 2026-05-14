@@ -412,11 +412,6 @@ export default function App() {
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
   const [werkbonDoormel, setWerkbonDoormel] = useState<{ label: string; waarde: string }[]>([]);
   const [werkbonScanPreview, setWerkbonScanPreview] = useState<string | null>(null);
-  const [dagWerkbonnen, setDagWerkbonnen] = useState<{ id: number; datum: string; projectcode: string; wonummer: string; opdrachtgever: string; projectnaam: string }[]>([]);
-  const [dagKilometers, setDagKilometers] = useState("");
-  const [dagNotities, setDagNotities] = useState("");
-  const [dagScanBezig, setDagScanBezig] = useState(false);
-  const [dagScanMelding, setDagScanMelding] = useState("");
 
   // Laad opgeslagen gegevens na hydration (localStorage alleen beschikbaar in browser)
   useEffect(() => {
@@ -481,9 +476,6 @@ export default function App() {
     try {
       const s = localStorage.getItem("werkbon_projecten"); if (s) setProjecten(JSON.parse(s));
     } catch {}
-    try { const s = localStorage.getItem("dag_werkbonnen"); if (s) setDagWerkbonnen(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem("dag_kilometers"); if (s) setDagKilometers(s); } catch {}
-    try { const s = localStorage.getItem("dag_notities"); if (s) setDagNotities(s); } catch {}
   }, []);
 
   useEffect(() => { localStorage.setItem("werkbon_info", JSON.stringify(info)); }, [info]);
@@ -517,9 +509,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem("werkbon_fotos", JSON.stringify(notitieFotos)); }, [notitieFotos]);
   useEffect(() => { if (werkbonScanPreview) localStorage.setItem("werkbon_scan_preview", werkbonScanPreview); else localStorage.removeItem("werkbon_scan_preview"); }, [werkbonScanPreview]);
   useEffect(() => { localStorage.setItem("werkbon_actieve_tabs", JSON.stringify(actieveTabs)); }, [actieveTabs]);
-  useEffect(() => { localStorage.setItem("dag_werkbonnen", JSON.stringify(dagWerkbonnen)); }, [dagWerkbonnen]);
-  useEffect(() => { localStorage.setItem("dag_kilometers", dagKilometers); }, [dagKilometers]);
-  useEffect(() => { localStorage.setItem("dag_notities", dagNotities); }, [dagNotities]);
 
   function handmatigOpslaan() {
     setOpslaanMelding("✅ Opgeslagen!");
@@ -1460,139 +1449,50 @@ export default function App() {
         {tab === "werkbon" && (
           <div>
             <div style={{ marginBottom: 22 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Daglijst</h1>
-              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Scan je werkbonnen van vandaag en voer je kilometers in</p>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: VW_TEXT, letterSpacing: "-0.02em", margin: 0 }}>Werkbon gegevens</h1>
+              <p style={{ color: VW_MUTED, margin: "4px 0 0", fontSize: 13 }}>Alle gegevens uitgelezen van de gescande werkbon</p>
             </div>
-
-            {/* SCAN KNOP */}
-            <Card icon="📷" title="Werkbon toevoegen">
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: VW_CYAN, color: "#0a0a12", borderRadius: 12, padding: "14px 20px", cursor: "pointer", fontWeight: 700, fontSize: 15, marginBottom: dagScanMelding ? 12 : 0 }}>
-                {dagScanBezig ? "⏳ Bezig met scannen..." : "📷 Werkbon scannen"}
-                <input type="file" accept="image/*" capture="environment" style={{ display: "none" }} disabled={dagScanBezig} onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  e.target.value = "";
-                  setDagScanBezig(true);
-                  setDagScanMelding("Werkbon wordt gelezen...");
-                  try {
-                    const dataUrl: string = await new Promise((resolve, reject) => {
-                      const url = URL.createObjectURL(file);
-                      const img = new Image();
-                      img.onload = () => {
-                        URL.revokeObjectURL(url);
-                        const MAX = 1200;
-                        let w = img.width, h = img.height;
-                        if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; } }
-                        const canvas = document.createElement("canvas");
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-                        let result = canvas.toDataURL("image/jpeg", 0.80);
-                        if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
-                        resolve(result);
-                      };
-                      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Afbeelding kon niet worden geladen.")); };
-                      img.src = url;
-                    });
-                    const base64 = dataUrl.split(",")[1];
-                    const res = await fetch("/api/scan-werkbon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ base64, mediaType: "image/jpeg" }) });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error ?? "Scanfout");
-                    const entry = {
-                      id: Date.now(),
-                      datum: data.datum || new Date().toISOString().slice(0, 10),
-                      projectcode: data.projectnummer || "",
-                      wonummer: data.wonummer || "",
-                      opdrachtgever: data.opdrachtgever || "",
-                      projectnaam: data.projectnaam || "",
-                    };
-                    setDagWerkbonnen(prev => [...prev, entry]);
-                    setDagScanMelding(`✅ Toegevoegd: ${entry.projectcode || entry.opdrachtgever || "werkbon"}`);
-                  } catch (err: any) {
-                    setDagScanMelding(`❌ ${err?.message ?? "Onbekende fout"}`);
-                  }
-                  setDagScanBezig(false);
-                  setTimeout(() => setDagScanMelding(""), 4000);
-                }} />
-              </label>
-              {dagScanMelding && (
-                <div style={{ marginTop: 10, padding: "8px 14px", background: dagScanMelding.startsWith("✅") ? "#f0fdf4" : dagScanMelding.startsWith("❌") ? "#fef2f2" : "#eff6ff", borderRadius: 8, fontSize: 13, fontWeight: 600, color: dagScanMelding.startsWith("✅") ? "#166534" : dagScanMelding.startsWith("❌") ? "#991b1b" : "#1d4ed8" }}>
-                  {dagScanMelding}
-                </div>
-              )}
-            </Card>
-
-            {/* LIJST GESCANDE WERKBONNEN */}
-            <Card icon="📋" title={`Gescande werkbonnen (${dagWerkbonnen.length})`}>
-              {dagWerkbonnen.length === 0 ? (
-                <p style={{ color: "#94a3b8", fontSize: 14, margin: 0, textAlign: "center" as const, padding: "12px 0" }}>Nog geen werkbonnen gescand vandaag.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                  {dagWerkbonnen.map((bon, i) => (
-                    <div key={bon.id} style={{ display: "flex", alignItems: "center", gap: 10, background: VW_SURF2, borderRadius: 10, padding: "12px 14px", border: `1px solid ${VW_BORDER}` }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#94a3b8", minWidth: 22 }}>{i + 1}.</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const, marginBottom: 2 }}>
-                          {bon.projectcode && <span style={{ background: "#dbeafe", color: "#1e40af", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>{bon.projectcode}</span>}
-                          {bon.wonummer && <span style={{ background: "#f0fdf4", color: "#166534", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>{bon.wonummer}</span>}
-                          {bon.datum && <span style={{ color: "#64748b", fontSize: 12 }}>{bon.datum}</span>}
-                        </div>
-                        {(bon.opdrachtgever || bon.projectnaam) && (
-                          <div style={{ fontSize: 12, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{[bon.opdrachtgever, bon.projectnaam].filter(Boolean).join(" — ")}</div>
-                        )}
-                      </div>
-                      <button onClick={() => setDagWerkbonnen(prev => prev.filter(b => b.id !== bon.id))} style={{ background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>✕</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* KILOMETERS + NOTITIES */}
-            <Card icon="🚗" title="Kilometers & notities">
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#64748b", display: "block", marginBottom: 6, textTransform: "uppercase" as const }}>Kilometers vandaag</label>
-                <input
-                  type="number"
-                  value={dagKilometers}
-                  onChange={e => setDagKilometers(e.target.value)}
-                  placeholder="bijv. 245"
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${VW_BORDER}`, fontSize: 15, fontWeight: 700, boxSizing: "border-box" as const, background: VW_SURF2, color: VW_TEXT, outline: "none" }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#64748b", display: "block", marginBottom: 6, textTransform: "uppercase" as const }}>Notities medewerker</label>
-                <textarea
-                  value={dagNotities}
-                  onChange={e => setDagNotities(e.target.value)}
-                  placeholder="Eventuele opmerkingen voor de eigenaar..."
-                  rows={3}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${VW_BORDER}`, fontSize: 14, boxSizing: "border-box" as const, background: VW_SURF2, color: VW_TEXT, outline: "none", resize: "vertical" as const, fontFamily: "inherit" }}
-                />
-              </div>
-            </Card>
-
-            {/* VERSTUUR NAAR EIGENAAR */}
-            {dagWerkbonnen.length > 0 && (() => {
-              const naam = info.monteur || "Medewerker";
-              const datumLabel = dagWerkbonnen[0]?.datum ? new Date(dagWerkbonnen[0].datum).toLocaleDateString("nl-NL") : new Date().toLocaleDateString("nl-NL");
-              const regels = dagWerkbonnen.map((b, i) => `${i + 1}. ${[b.projectcode, b.wonummer].filter(Boolean).join(" / ")}${b.opdrachtgever ? " — " + b.opdrachtgever : ""}`).join("\n");
-              const tekst = `VanWinden Techniek — Daglijst\nMedewerker: ${naam}\nDatum: ${datumLabel}\n\nWerkbonnen:\n${regels}\n\nKilometers: ${dagKilometers || "—"} km${dagNotities ? "\n\nNotities:\n" + dagNotities : ""}`;
-              return (
-                <Card icon="📤" title="Versturen naar eigenaar">
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-                    <button onClick={() => { navigator.clipboard.writeText(tekst).catch(() => {}); setDagScanMelding("✅ Gekopieerd naar klembord!"); setTimeout(() => setDagScanMelding(""), 3000); }} style={{ background: VW_CYAN, color: "#0a0a12", border: "none", borderRadius: 10, padding: "13px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                      📋 Kopiëren naar klembord
-                    </button>
-                    <a href={`https://wa.me/31${(process.env.NEXT_PUBLIC_EIGENAAR_TEL || "").replace(/^0/, "").replace(/\D/g, "")}?text=${encodeURIComponent(tekst)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "center" as const, display: "block", textDecoration: "none" }}>
-                      💬 Versturen via WhatsApp
-                    </a>
-                    <button onClick={() => { setDagWerkbonnen([]); setDagKilometers(""); setDagNotities(""); setDagScanMelding("✅ Daglijst gewist."); setTimeout(() => setDagScanMelding(""), 3000); }} style={{ background: "#fef2f2", color: "#dc2626", border: `1px solid #fca5a5`, borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                      🗑️ Daglijst wissen
-                    </button>
-                  </div>
-                </Card>
-              );
-            })()}
+            {werkbonDoormel.length === 0 && werkbonExtra.length === 0 ? (
+              <Card icon="📄" title="Nog geen werkbon gescand">
+                <p style={{ color: "#64748b", fontSize: 14, margin: 0 }}>Ga naar het tabblad <strong>Project</strong> en upload een foto van de werkbon. De gegevens verschijnen dan hier.</p>
+              </Card>
+            ) : (
+              <>
+                {werkbonDoormel.length > 0 && (
+                  <Card icon="📡" title="Doormeldgegevens">
+                    <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
+                      <tbody>
+                        {werkbonDoormel.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid #dbeafe" }}>
+                            <td style={{ padding: "10px 12px 10px 0", color: "#1d4ed8", fontWeight: 600, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
+                            <td style={{ padding: "10px 0", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace" }}>{r.waarde}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                )}
+                {werkbonExtra.length > 0 && (
+                  <Card icon="📋" title="Overige werkbon gegevens">
+                    <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 14 }}>
+                      <tbody>
+                        {werkbonExtra.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "10px 12px 10px 0", color: "#64748b", fontWeight: 600, width: "40%", verticalAlign: "top" as const }}>{r.label}</td>
+                            <td style={{ padding: "10px 0", color: "#0f172a" }}>{r.waarde}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                )}
+              </>
+            )}
+            {werkbonScanPreview && (
+              <Card icon="🖼️" title="Gescande werkbon">
+                <img src={werkbonScanPreview} alt="werkbon scan" style={{ width: "100%", borderRadius: 10, display: "block", objectFit: "contain" }} />
+              </Card>
+            )}
           </div>
         )}
 
