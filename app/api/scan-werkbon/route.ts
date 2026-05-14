@@ -33,7 +33,8 @@ Het JSON object moet deze velden bevatten:
 {
   "opdrachtgever": "naam van het bedrijf of de klant die de opdracht geeft — dit is de OPDRACHTGEVER of KLANT, niet de locatie",
   "projectnaam": "naam of omschrijving van de locatie of het object — bijv. gebouwnaam, straatnaam, winkelcentrum, school, etc. Dit staat vaak bij 'Project', 'Object', 'Locatie' of 'Adres' op de werkbon",
-  "projectnummer": "ALLEEN de projectcode die VOOR het WO-nummer staat — bijv. als er staat 'S095001S  WO242131' geef dan 'S095001S'. Staat er geen projectcode voor het WO-nummer, geef dan het WO-nummer zelf. Nooit beide samen in dit veld.",
+  "projectnummer": "ALLEEN de projectcode die VOOR het WO-nummer staat — bijv. als er staat 'S095001S  WO242131' geef dan 'S095001S'. Staat er geen aparte projectcode, geef dan een lege string.",
+  "wonummer": "ALLEEN het WO-nummer — bijv. 'WO242131'. Staat er geen WO-nummer, geef dan een lege string.",
   "datum": "datum in YYYY-MM-DD formaat",
   "monteur": "naam van de monteur of uitvoerder",
   "werkzaamheden": "type werkzaamheden",
