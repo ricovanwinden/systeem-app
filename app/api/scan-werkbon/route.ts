@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
 
 Het JSON object moet deze velden bevatten:
 {
-  "opdrachtgever": "naam van het bedrijf/opdrachtgever",
-  "projectnaam": "naam van het project of locatie",
+  "opdrachtgever": "naam van het bedrijf of de klant die de opdracht geeft — dit is de OPDRACHTGEVER of KLANT, niet de locatie",
+  "projectnaam": "naam of omschrijving van de locatie of het object — bijv. gebouwnaam, straatnaam, winkelcentrum, school, etc. Dit staat vaak bij 'Project', 'Object', 'Locatie' of 'Adres' op de werkbon",
   "projectnummer": "projectcode of werkopdrachtnummer",
   "datum": "datum in YYYY-MM-DD formaat",
   "monteur": "naam van de monteur of uitvoerder",
@@ -47,6 +47,8 @@ Het JSON object moet deze velden bevatten:
   "waarschuwingen": ["tekst van de waarschuwing"],
   "meldingen": ["tekst van de melding"]
 }
+
+BELANGRIJK onderscheid opdrachtgever vs projectnaam: "opdrachtgever" is de KLANT of het BEDRIJF dat VanWinden Techniek inhuurt (staat bij 'Klant', 'Opdrachtgever', 'Facturatie'). "projectnaam" is de LOCATIE of het OBJECT waar de werkzaamheden plaatsvinden (staat bij 'Project', 'Object', 'Locatie', 'Adres', 'Omschrijving'). Als op de werkbon één naam staat bij 'Opdrachtgever/Project' combinatie, zet die dan bij opdrachtgever en gebruik de locatie/adres als projectnaam.
 
 Voor "systeemCode": op de werkbon staat bovenaan altijd een regel zoals "Onderhoud O-VG" of "Onderhoud O-VGB" of "Onderhoud O-B" etc. Geef ALLEEN het gedeelte na "Onderhoud" terug, dus enkel de code zelf zoals "O-VG" of "O-VGB". Andere mogelijke waarden zijn: O-G, O-B, O-R, O-O, O-V, O-VB, O-VG, O-VGB, O-RIVG, beheer bmi, rwa. Als er geen code staat, geef dan "".
 
