@@ -516,7 +516,7 @@ export default function App() {
   }
 
   function slaOpAlsProject() {
-    const projectnaam = info.projectnaam || info.opdrachtgever || "Naamloos project";
+    const projectnaam = info.projectnummer || info.projectnaam || info.opdrachtgever || "Naamloos project";
     const nieuw = {
       id: Date.now(),
       projectnaam,
@@ -1613,7 +1613,10 @@ export default function App() {
                       return (
                         <button key={naam} onClick={() => setOpenMap(naam)} style={{ background: VW_SURF2, border: `1.5px solid ${VW_BORDER}`, borderRadius: 14, padding: "16px 18px", cursor: "pointer", textAlign: "left" as const, transition: "border-color 0.15s" }}>
                           <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: VW_TEXT, marginBottom: 4, wordBreak: "break-word" as const }}>{naam}</div>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: VW_TEXT, marginBottom: 2, wordBreak: "break-word" as const }}>{naam}</div>
+                          {laatste.data?.info?.projectnaam && naam !== laatste.data.info.projectnaam && (
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4, wordBreak: "break-word" as const }}>{laatste.data.info.projectnaam}</div>
+                          )}
                           <div style={{ fontSize: 12, color: "#64748b" }}>{bonnen.length} bon{bonnen.length !== 1 ? "nen" : ""}</div>
                           <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{laatste.datum || "geen datum"}</div>
                         </button>

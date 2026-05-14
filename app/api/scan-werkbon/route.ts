@@ -33,7 +33,7 @@ Het JSON object moet deze velden bevatten:
 {
   "opdrachtgever": "naam van het bedrijf of de klant die de opdracht geeft — dit is de OPDRACHTGEVER of KLANT, niet de locatie",
   "projectnaam": "naam of omschrijving van de locatie of het object — bijv. gebouwnaam, straatnaam, winkelcentrum, school, etc. Dit staat vaak bij 'Project', 'Object', 'Locatie' of 'Adres' op de werkbon",
-  "projectnummer": "projectcode of werkopdrachtnummer",
+  "projectnummer": "ALLEEN de projectcode die VOOR het WO-nummer staat — bijv. als er staat 'S095001S  WO242131' geef dan 'S095001S'. Staat er geen projectcode voor het WO-nummer, geef dan het WO-nummer zelf. Nooit beide samen in dit veld.",
   "datum": "datum in YYYY-MM-DD formaat",
   "monteur": "naam van de monteur of uitvoerder",
   "werkzaamheden": "type werkzaamheden",
@@ -54,7 +54,7 @@ Voor "systeemCode": op de werkbon staat bovenaan altijd een regel zoals "Onderho
 
 Voor "doormeldgegevens": zoek specifiek naar doormeldinformatie van alarmsystemen. Denk aan: OMS aansluitnummer, SECONTS aansluitnummer, RMS aansluitnummer, BOLDNET aansluitnummer, en andere alarmcentrale-verbindingsgegevens zoals IP-adres, poort, accountnummer, klantnummer, meldkamer, SIA, CID, polling, receiver, transmitter, telefoonnummer doormelding. Sla GEEN financiële gegevens op zoals IBAN, BTW-nummer of bankrekeningnummers.
 
-Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc.
+Voor "extraGegevens": voeg ALLE overige informatie toe die op de werkbon staat maar niet in de bovenstaande velden past. Denk aan: adres, postcode, contactpersoon, telefoonnummer, referentienummer, omschrijving werkzaamheden, materialen, opmerkingen, handtekening, factuuradres, etc. Zet het WO-nummer (bijv. "WO242131") hier ook in als apart item met label "Werkopdrachtnummer".
 
 Voor "waarschuwingen": zoek naar alle opmerkingen, aandachtspunten of notities op de werkbon die beginnen met "let op", "attentie", "belangrijk", "opgelet", "waarschuwing", "LET OP", "!!" of vergelijkbare waarschuwingsteksten. Geef elke waarschuwing als losse string terug. Als er geen zijn, gebruik dan een lege array [].
 
