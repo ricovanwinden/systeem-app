@@ -407,6 +407,8 @@ export default function App() {
   const [actieveTabs, setActieveTabs] = useState<string[]>(["brandmeld", "gasdetectie", "ventilatie", "logboek"]);
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
+  const [openMap, setOpenMap] = useState<string | null>(null);
+  const [zoekterm, setZoekterm] = useState("");
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
   const [werkbonDoormel, setWerkbonDoormel] = useState<{ label: string; waarde: string }[]>([]);
   const [werkbonScanPreview, setWerkbonScanPreview] = useState<string | null>(null);
@@ -514,28 +516,34 @@ export default function App() {
   }
 
   function slaOpAlsProject() {
-    const naam = info.opdrachtgever || "Naamloos project";
+    const projectnaam = info.projectnaam || info.opdrachtgever || "Naamloos project";
     const nieuw = {
       id: Date.now(),
-      naam,
+      projectnaam,
       opdrachtgever: info.opdrachtgever,
       datum: info.datum,
+      werkzaamheden: info.werkzaamheden,
       opgeslagenOp: new Date().toLocaleString("nl-NL"),
       data: { info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen, notitieFotos },
     };
-    const bijgewerkt = [nieuw, ...projecten].slice(0, 50);
+    // Migreer oude bonnen zonder projectnaam
+    const gemigreerd = projecten.map(p => p.projectnaam ? p : { ...p, projectnaam: p.naam || "Naamloos project" });
+    const bijgewerkt = [nieuw, ...gemigreerd].slice(0, 200);
     setProjecten(bijgewerkt);
     localStorage.setItem("werkbon_projecten", JSON.stringify(bijgewerkt));
-    setOpslaanMelding(`✅ "${naam}" opgeslagen!`);
+    setOpslaanMelding(`✅ Opgeslagen in "${projectnaam}"!`);
     setTimeout(() => setOpslaanMelding(""), 3000);
   }
 
   function laadProject(p: any) {
-    if (!confirm(`Huidig project wordt vervangen door "${p.naam}". Doorgaan?`)) return;
+    const label = p.projectnaam || p.naam || "dit project";
+    if (!confirm(`Huidig project wordt vervangen door "${label}". Doorgaan?`)) return;
     setInfo(p.data.info); setBm(p.data.bm); setGas(p.data.gas);
     setVentRijen(p.data.ventRijen); if (p.data.ventStroom) setVentStroom(p.data.ventStroom); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
     if (p.data.notitieFotos) setNotitieFotos(p.data.notitieFotos);
     setToonProjecten(false);
+    setOpenMap(null);
+    setZoekterm("");
     setTab("info");
   }
 
@@ -1526,38 +1534,112 @@ export default function App() {
       )}
 
       {/* PROJECTEN PANEEL */}
-      {toonProjecten && (
-        <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => setToonProjecten(false)}>
-          <div style={{ background: VW_SURF, width: "100%", maxHeight: "80vh", borderRadius: "16px 16px 0 0", padding: 24, overflowY: "auto" as const, border: `1px solid ${VW_BORDER}`, borderBottom: "none" }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: VW_TEXT }}>Opgeslagen projecten</h2>
-                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>{projecten.length} project{projecten.length !== 1 ? "en" : ""} opgeslagen op dit apparaat</p>
-              </div>
-              <button onClick={() => setToonProjecten(false)} style={{ background: VW_SURF2, border: `1px solid ${VW_BORDER}`, borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: VW_MUTED }}>Sluiten</button>
-            </div>
-            {projecten.length === 0 ? (
-              <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
-                <p style={{ margin: 0 }}>Nog geen projecten opgeslagen.<br/>Druk op 💾 Opslaan om te beginnen.</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-                {projecten.map(p => (
-                  <div key={p.id} style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{p.naam}</div>
-                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{p.datum || "geen datum"} · Opgeslagen: {p.opgeslagenOp}</div>
-                    </div>
-                    <button onClick={() => laadProject(p)} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Openen</button>
-                    <button onClick={() => verwijderProject(p.id)} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+      {toonProjecten && (() => {
+        // Migreer oude records zonder projectnaam
+        const alleProjecten = projecten.map(p => p.projectnaam ? p : { ...p, projectnaam: p.naam || "Naamloos project" });
+        // Groepeer op projectnaam
+        const mappen: Record<string, any[]> = {};
+        for (const bon of alleProjecten) {
+          if (!mappen[bon.projectnaam]) mappen[bon.projectnaam] = [];
+          mappen[bon.projectnaam].push(bon);
+        }
+        // Zoekfilter op mapnamen
+        const gefilterd = Object.keys(mappen)
+          .filter(naam => naam.toLowerCase().includes(zoekterm.toLowerCase()))
+          .sort((a, b) => a.localeCompare(b, "nl"));
+
+        return (
+          <div style={{ position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" as const }} onClick={() => { setToonProjecten(false); setOpenMap(null); setZoekterm(""); }}>
+            <div style={{ background: VW_SURF, width: "100%", maxHeight: "85vh", borderRadius: "16px 16px 0 0", padding: 24, overflowY: "auto" as const, border: `1px solid ${VW_BORDER}`, borderBottom: "none" }} onClick={e => e.stopPropagation()}>
+
+              {/* HEADER */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {openMap && (
+                    <button onClick={() => setOpenMap(null)} style={{ background: VW_SURF2, border: `1px solid ${VW_BORDER}`, borderRadius: 7, padding: "6px 12px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: VW_MUTED }}>← Terug</button>
+                  )}
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: VW_TEXT }}>
+                      {openMap ? `📂 ${openMap}` : "Opgeslagen projecten"}
+                    </h2>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>
+                      {openMap ? `${mappen[openMap]?.length ?? 0} bon(nen)` : `${gefilterd.length} map(pen)`}
+                    </p>
                   </div>
-                ))}
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {openMap && (
+                    <button onClick={() => {
+                      if (!confirm(`Wil je alle bonnen in "${openMap}" verwijderen?`)) return;
+                      const bijgewerkt = projecten.filter(p => (p.projectnaam || p.naam) !== openMap);
+                      setProjecten(bijgewerkt);
+                      localStorage.setItem("werkbon_projecten", JSON.stringify(bijgewerkt));
+                      setOpenMap(null);
+                    }} style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fca5a5", borderRadius: 7, padding: "6px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🗑️ Map verwijderen</button>
+                  )}
+                  <button onClick={() => { setToonProjecten(false); setOpenMap(null); setZoekterm(""); }} style={{ background: VW_SURF2, border: `1px solid ${VW_BORDER}`, borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: VW_MUTED }}>Sluiten</button>
+                </div>
               </div>
-            )}
+
+              {/* ZOEKBALK (alleen op mappenlijst) */}
+              {!openMap && (
+                <input
+                  value={zoekterm}
+                  onChange={e => setZoekterm(e.target.value)}
+                  placeholder="🔍 Zoek op projectnaam..."
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${VW_BORDER}`, fontSize: 14, marginBottom: 16, boxSizing: "border-box" as const, background: VW_SURF2, color: VW_TEXT, outline: "none" }}
+                />
+              )}
+
+              {/* MAPPENLIJST */}
+              {!openMap && (
+                alleProjecten.length === 0 ? (
+                  <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
+                    <p style={{ margin: 0 }}>Nog geen projecten opgeslagen.<br/>Druk op 💾 Opslaan om te beginnen.</p>
+                  </div>
+                ) : gefilterd.length === 0 ? (
+                  <div style={{ textAlign: "center" as const, padding: "32px 0", color: "#94a3b8" }}>
+                    <p style={{ margin: 0 }}>Geen projecten gevonden voor "{zoekterm}".</p>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+                    {gefilterd.map(naam => {
+                      const bonnen = mappen[naam];
+                      const laatste = bonnen.sort((a: any, b: any) => b.id - a.id)[0];
+                      return (
+                        <button key={naam} onClick={() => setOpenMap(naam)} style={{ background: VW_SURF2, border: `1.5px solid ${VW_BORDER}`, borderRadius: 14, padding: "16px 18px", cursor: "pointer", textAlign: "left" as const, transition: "border-color 0.15s" }}>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: VW_TEXT, marginBottom: 4, wordBreak: "break-word" as const }}>{naam}</div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>{bonnen.length} bon{bonnen.length !== 1 ? "nen" : ""}</div>
+                          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{laatste.datum || "geen datum"}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              )}
+
+              {/* BONNENLIJST IN MAP */}
+              {openMap && (
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                  {(mappen[openMap] ?? []).sort((a: any, b: any) => b.id - a.id).map((p: any) => (
+                    <div key={p.id} style={{ background: VW_SURF2, border: `1.5px solid ${VW_BORDER}`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: VW_TEXT }}>{p.datum || "geen datum"} — {p.opdrachtgever || p.naam || "—"}</div>
+                        <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{p.werkzaamheden || ""} · Opgeslagen: {p.opgeslagenOp}</div>
+                      </div>
+                      <button onClick={() => laadProject(p)} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Openen</button>
+                      <button onClick={() => verwijderProject(p.id)} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

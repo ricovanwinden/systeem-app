@@ -2,9 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const SUPABASE_URL = "https://ukpsvzsczqgjoixfugwj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcHN2enNjenFnam9peGZ1Z3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDY1MTEsImV4cCI6MjA5MzkyMjUxMX0.j0XF0T5mzWMOXu0hnxRChT78ix0VK38l6S9PxY5xhPM";
-
 export default function AdminPage() {
   const router = useRouter();
   const [gebruikers, setGebruikers] = useState<any[]>([]);
@@ -24,24 +21,23 @@ export default function AdminPage() {
   }, []);
 
   async function laadData() {
-    const resG = await fetch(`${SUPABASE_URL}/rest/v1/gebruikers?select=*&order=aangemaakt_op.desc`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    });
+    const [resG, resL] = await Promise.all([
+      fetch("/api/admin/gebruikers"),
+      fetch("/api/admin/login-log"),
+    ]);
     setGebruikers(await resG.json());
-
-    const resL = await fetch(`${SUPABASE_URL}/rest/v1/login_log?select=*&order=ingelogd_op.desc&limit=50`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    });
     setLoginLog(await resL.json());
   }
 
   async function voegToe() {
     if (!nieuwNaam || !nieuwGebruikersnaam || !nieuwWachtwoord) { setMelding("Vul alle velden in."); return; }
-    await fetch(`${SUPABASE_URL}/rest/v1/gebruikers`, {
+    const res = await fetch("/api/admin/gebruikers", {
       method: "POST",
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ naam: nieuwNaam, gebruikersnaam: nieuwGebruikersnaam, wachtwoord: nieuwWachtwoord, rol: "monteur" }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ naam: nieuwNaam, gebruikersnaam: nieuwGebruikersnaam, wachtwoord: nieuwWachtwoord }),
     });
+    const data = await res.json();
+    if (!res.ok) { setMelding(data.error ?? "Fout bij toevoegen."); return; }
     setMelding(`✅ ${nieuwNaam} toegevoegd!`);
     setNieuwNaam(""); setNieuwGebruikersnaam(""); setNieuwWachtwoord("");
     laadData();
@@ -49,10 +45,7 @@ export default function AdminPage() {
 
   async function verwijder(id: string, naam: string) {
     if (!confirm(`Weet je zeker dat je ${naam} wilt verwijderen?`)) return;
-    await fetch(`${SUPABASE_URL}/rest/v1/gebruikers?id=eq.${id}`, {
-      method: "DELETE",
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    });
+    await fetch(`/api/admin/gebruikers?id=${id}`, { method: "DELETE" });
     laadData();
   }
 

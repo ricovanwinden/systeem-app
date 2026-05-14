@@ -2,9 +2,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const SUPABASE_URL = "https://ukpsvzsczqgjoixfugwj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcHN2enNjenFnam9peGZ1Z3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDY1MTEsImV4cCI6MjA5MzkyMjUxMX0.j0XF0T5mzWMOXu0hnxRChT78ix0VK38l6S9PxY5xhPM";
-
 export default function LoginPage() {
   const router = useRouter();
   const [gebruikersnaam, setGebruikersnaam] = useState("");
@@ -16,49 +13,21 @@ export default function LoginPage() {
     setLaden(true);
     setFout("");
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/gebruikers?gebruikersnaam=eq.${gebruikersnaam}&wachtwoord=eq.${wachtwoord}&select=*`, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gebruikersnaam, wachtwoord }),
     });
 
     const data = await res.json();
 
-    if (data.length === 0) {
-      setFout("Gebruikersnaam of wachtwoord klopt niet.");
+    if (!res.ok) {
+      setFout(data.error ?? "Inloggen mislukt.");
       setLaden(false);
       return;
     }
 
-    const gebruiker = data[0];
-
-    // Login bijhouden
-    await fetch(`${SUPABASE_URL}/rest/v1/login_log`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        gebruiker_id: gebruiker.id,
-        naam: gebruiker.naam,
-      }),
-    });
-
-    // Laatste login bijwerken
-    await fetch(`${SUPABASE_URL}/rest/v1/gebruikers?id=eq.${gebruiker.id}`, {
-      method: "PATCH",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ laatste_login: new Date().toISOString() }),
-    });
-
-    // Opslaan in sessie
+    const gebruiker = data.gebruiker;
     localStorage.setItem("gebruiker", JSON.stringify(gebruiker));
 
     if (gebruiker.rol === "admin") {
