@@ -524,7 +524,7 @@ export default function App() {
       datum: info.datum,
       werkzaamheden: info.werkzaamheden,
       opgeslagenOp: new Date().toLocaleString("nl-NL"),
-      data: { info, bm, gas, ventRijen, ventStroom, logboek, aantekeningen, notitieFotos },
+      data: { info, bm, gas, ventRijen, ventChecklist, ventStroom, logboek, aantekeningen, notitieFotos, actieveTabs },
     };
     // Migreer oude bonnen zonder projectnaam
     const gemigreerd = projecten.map(p => p.projectnaam ? p : { ...p, projectnaam: p.naam || "Naamloos project" });
@@ -539,8 +539,11 @@ export default function App() {
     const label = p.projectnaam || p.naam || "dit project";
     if (!confirm(`Huidig project wordt vervangen door "${label}". Doorgaan?`)) return;
     setInfo(p.data.info); setBm(p.data.bm); setGas(p.data.gas);
-    setVentRijen(p.data.ventRijen); if (p.data.ventStroom) setVentStroom(p.data.ventStroom); setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
+    setVentRijen(p.data.ventRijen); if (p.data.ventStroom) setVentStroom(p.data.ventStroom);
+    if (p.data.ventChecklist) setVentChecklist(p.data.ventChecklist);
+    setLogboek(p.data.logboek); setAantekeningen(p.data.aantekeningen);
     if (p.data.notitieFotos) setNotitieFotos(p.data.notitieFotos);
+    if (p.data.actieveTabs) setActieveTabs(p.data.actieveTabs);
     setToonProjecten(false);
     setOpenMap(null);
     setZoekterm("");
