@@ -147,6 +147,14 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
   const [meldingen, setMeldingen] = useState<string[]>([]);
   const [popupWachtrij, setPopupWachtrij] = useState<{ tekst: string; type: "waarschuwing" | "melding" }[]>([]);
   const [activePopup, setActivePopup] = useState<{ tekst: string; type: "waarschuwing" | "melding" } | null>(null);
+  const [scanTijd, setScanTijd] = useState(0);
+
+  useEffect(() => {
+    if (!bezig) { setScanTijd(0); return; }
+    setScanTijd(0);
+    const interval = setInterval(() => setScanTijd(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [bezig]);
 
   async function verwerkFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -258,7 +266,7 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
       )}
       {melding && (
         <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 10, background: melding.startsWith("✅") ? "#f0fdf4" : melding.startsWith("❌") ? "#fef2f2" : "#eff6ff", color: melding.startsWith("✅") ? "#166534" : melding.startsWith("❌") ? "#991b1b" : "#1d4ed8", fontWeight: 600, fontSize: 14 }}>
-          {melding}
+          {melding}{bezig && scanTijd > 0 ? ` (${scanTijd}s)` : ""}
         </div>
       )}
 

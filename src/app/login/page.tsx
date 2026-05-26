@@ -27,8 +27,12 @@ export default function LoginPage() {
       return;
     }
 
-    const gebruiker = data.gebruiker;
+    const { gebruiker, sessionToken } = data;
+
+    // Gebruikersinfo opslaan (zonder wachtwoord — dat komt niet meer terug)
     localStorage.setItem("gebruiker", JSON.stringify(gebruiker));
+    // Session token apart opslaan voor API-verzoeken
+    localStorage.setItem("sessionToken", sessionToken);
 
     if (gebruiker.rol === "admin") {
       router.push("/admin");

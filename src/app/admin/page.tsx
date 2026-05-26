@@ -12,6 +12,17 @@ export default function AdminPage() {
   const [melding, setMelding] = useState("");
   const [tab, setTab] = useState<"gebruikers"|"log">("gebruikers");
 
+  function getToken(): string {
+    return localStorage.getItem("sessionToken") ?? "";
+  }
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    };
+  }
+
   useEffect(() => {
     const g = localStorage.getItem("gebruiker");
     if (!g) { router.push("/login"); return; }
@@ -21,10 +32,15 @@ export default function AdminPage() {
   }, []);
 
   async function laadData() {
+    const headers = { Authorization: `Bearer ${getToken()}` };
     const [resG, resL] = await Promise.all([
-      fetch("/api/admin/gebruikers"),
-      fetch("/api/admin/login-log"),
+      fetch("/api/admin/gebruikers", { headers }),
+      fetch("/api/admin/login-log", { headers }),
     ]);
+    if (resG.status === 403 || resL.status === 403) {
+      router.push("/login");
+      return;
+    }
     setGebruikers(await resG.json());
     setLoginLog(await resL.json());
   }
@@ -33,7 +49,7 @@ export default function AdminPage() {
     if (!nieuwNaam || !nieuwGebruikersnaam || !nieuwWachtwoord) { setMelding("Vul alle velden in."); return; }
     const res = await fetch("/api/admin/gebruikers", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ naam: nieuwNaam, gebruikersnaam: nieuwGebruikersnaam, wachtwoord: nieuwWachtwoord }),
     });
     const data = await res.json();
@@ -45,8 +61,17 @@ export default function AdminPage() {
 
   async function verwijder(id: string, naam: string) {
     if (!confirm(`Weet je zeker dat je ${naam} wilt verwijderen?`)) return;
-    await fetch(`/api/admin/gebruikers?id=${id}`, { method: "DELETE" });
+    await fetch(`/api/admin/gebruikers?id=${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
     laadData();
+  }
+
+  function uitloggen() {
+    localStorage.removeItem("gebruiker");
+    localStorage.removeItem("sessionToken");
+    router.push("/login");
   }
 
   const F: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 14, boxSizing: "border-box", outline: "none" };
@@ -63,7 +88,7 @@ export default function AdminPage() {
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => router.push("/")} style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>← App</button>
-          <button onClick={() => { localStorage.removeItem("gebruiker"); router.push("/login"); }} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>Uitloggen</button>
+          <button onClick={uitloggen} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>Uitloggen</button>
         </div>
       </div>
 
