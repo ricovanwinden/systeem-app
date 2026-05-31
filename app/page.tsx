@@ -163,32 +163,31 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
     setMelding("Werkbon wordt gelezen...");
 
     try {
-      if (file.type === "image/heic" || file.type === "image/heif" || file.name.toLowerCase().endsWith(".heic") || file.name.toLowerCase().endsWith(".heif")) {
-        throw new Error("HEIC-formaat wordt niet ondersteund. Zet je camera-instelling op JPEG, of maak een screenshot in plaats van een foto.");
-      }
-
       const dataUrl: string = await new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => {
-          URL.revokeObjectURL(url);
-          const MAX = 1200;
-          let w = img.width, h = img.height;
-          if (w > MAX || h > MAX) {
-            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-            else { w = Math.round(w * MAX / h); h = MAX; }
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = w; canvas.height = h;
-          canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-          let result = canvas.toDataURL("image/jpeg", 0.80);
-          // Als de afbeelding nog te groot is, verder comprimeren
-          if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
-          if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
-          resolve(result);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX = 1200;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w; canvas.height = h;
+            canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+            let result = canvas.toDataURL("image/jpeg", 0.80);
+            // Als de afbeelding nog te groot is, verder comprimeren
+            if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
+            if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
+            resolve(result);
+          };
+          img.onerror = () => reject(new Error(`Afbeelding kon niet worden geladen (${file.type || "onbekend formaat"}). Probeer een PNG of JPEG screenshot.`));
+          img.src = reader.result as string;
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Afbeelding kon niet worden geladen. Probeer een andere foto of screenshot.")); };
-        img.src = url;
+        reader.onerror = () => reject(new Error("Bestand kon niet worden gelezen."));
+        reader.readAsDataURL(file);
       });
 
       setPreview(dataUrl);
@@ -611,9 +610,9 @@ export default function App() {
   const gasRust = parseFloat(gas.ruststroom) || null;
   const gasAlarm = parseFloat(gas.alarmstroom) || null;
   const gasUren = parseFloat(gas.backupUren) || 12;
-  // UPS: ruststroom/alarmstroom (mA) × 230V = VA belasting
-  const gasRustVA = gasRust ? Math.round((gasRust / 1000) * 230) : null;
-  const gasAlarmVA = gasAlarm ? Math.round((gasAlarm / 1000) * 230) : null;
+  // UPS: ruststroom/alarmstroom (A) × 230V = VA belasting
+  const gasRustVA = gasRust ? Math.round(gasRust * 230) : null;
+  const gasAlarmVA = gasAlarm ? Math.round(gasAlarm * 230) : null;
   const gasUPSVermogen = parseFloat(gas.upsvermogen) || null;
   const gasUPSBenodigd = gasAlarmVA ? Math.ceil(gasAlarmVA * 1.25) : null;
   const gasUPSVoldoende = gasUPSBenodigd !== null && gasUPSVermogen !== null ? gasUPSVermogen >= gasUPSBenodigd : null;
@@ -953,8 +952,8 @@ export default function App() {
               {isUPS ? (
                 <>
                   <div style={G2}>
-                    <div><label style={L}>Ruststroom (mA) @ 230V</label><input style={F} type="number" placeholder="bijv. 150" value={gas.ruststroom} onChange={e => setGas({...gas, ruststroom: e.target.value})} /></div>
-                    <div><label style={L}>Alarmstroom (mA) @ 230V</label><input style={F} type="number" placeholder="bijv. 450" value={gas.alarmstroom} onChange={e => setGas({...gas, alarmstroom: e.target.value})} /></div>
+                    <div><label style={L}>Ruststroom (A) @ 230V</label><input style={F} type="number" step="0.01" placeholder="bijv. 0.5" value={gas.ruststroom} onChange={e => setGas({...gas, ruststroom: e.target.value})} /></div>
+                    <div><label style={L}>Alarmstroom (A) @ 230V</label><input style={F} type="number" step="0.01" placeholder="bijv. 1.5" value={gas.alarmstroom} onChange={e => setGas({...gas, alarmstroom: e.target.value})} /></div>
                     <div><label style={L}>UPS vermogen (VA)</label>
                       <select style={F} value={gas.upsvermogen} onChange={e => setGas({...gas, upsvermogen: e.target.value})}>
                         {["600","800","1000","1500","2000","3000"].map(o => <option key={o} value={o}>{o} VA</option>)}
