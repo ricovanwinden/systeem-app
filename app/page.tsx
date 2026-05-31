@@ -910,19 +910,21 @@ export default function App() {
                   </div>
                 );
                 if (item.type === "tekst") return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
-                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                  <div key={i} style={{ ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "block", marginBottom: 8 }}>{item.vraag}</span>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input style={{...F, fontSize: 12, padding: "7px 10px", width: 140}} value={item.waarde||""} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setBm({...bm,checklistItems:a}); }} />
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", flex: 1, minWidth: 0}} value={item.waarde||""} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setBm({...bm,checklistItems:a}); }} />
                       {item.eenheid && <span style={{ fontSize: 12, color: "#64748b", minWidth: 20 }}>{item.eenheid}</span>}
                     </div>
                   </div>
                 );
                 return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
-                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                    <StatusPill status={item.status} onChange={s => { const a=[...bm.checklistItems]; a[i]={...a[i],status:s}; setBm({...bm,checklistItems:a}); }} />
-                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setBm({...bm,checklistItems:a}); }} />
+                  <div key={i} style={{ ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "block", marginBottom: 8 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <StatusPill status={item.status} onChange={s => { const a=[...bm.checklistItems]; a[i]={...a[i],status:s}; setBm({...bm,checklistItems:a}); }} />
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", flex: 1, minWidth: 0}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...bm.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setBm({...bm,checklistItems:a}); }} />
+                    </div>
                   </div>
                 );
               })}
@@ -1079,19 +1081,21 @@ export default function App() {
                   </div>
                 );
                 if (item.type === "tekst") return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", ...rowBg }}>
-                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
+                  <div key={i} style={{ ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "block", marginBottom: 8 }}>{item.vraag}</span>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input style={{...F, fontSize: 12, padding: "7px 10px", width: 120}} value={item.waarde||""} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setGas({...gas,checklistItems:a}); }} />
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", flex: 1, minWidth: 0}} value={item.waarde||""} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],waarde:e.target.value}; setGas({...gas,checklistItems:a}); }} />
                       {item.eenheid && <span style={{ fontSize: 12, color: "#64748b", minWidth: 20 }}>{item.eenheid}</span>}
                     </div>
                   </div>
                 );
                 return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
-                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                    <StatusPill status={item.status} onChange={s => { const a=[...gas.checklistItems]; a[i]={...a[i],status:s}; setGas({...gas,checklistItems:a}); }} />
-                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setGas({...gas,checklistItems:a}); }} />
+                  <div key={i} style={{ ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "block", marginBottom: 8 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <StatusPill status={item.status} onChange={s => { const a=[...gas.checklistItems]; a[i]={...a[i],status:s}; setGas({...gas,checklistItems:a}); }} />
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", flex: 1, minWidth: 0}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...gas.checklistItems]; a[i]={...a[i],opmerking:e.target.value}; setGas({...gas,checklistItems:a}); }} />
+                    </div>
                   </div>
                 );
               })}
