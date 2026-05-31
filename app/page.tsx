@@ -168,20 +168,33 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
         reader.onload = () => {
           const img = new Image();
           img.onload = () => {
-            const MAX = 1200;
-            let w = img.width, h = img.height;
-            if (w > MAX || h > MAX) {
-              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-              else { w = Math.round(w * MAX / h); h = MAX; }
+            try {
+              const MAX = 1200;
+              let w = img.width, h = img.height;
+              if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                else { w = Math.round(w * MAX / h); h = MAX; }
+              }
+              const canvas = document.createElement("canvas");
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) throw new Error("canvas");
+              ctx.drawImage(img, 0, 0, w, h);
+              let result = canvas.toDataURL("image/jpeg", 0.80);
+              // Als de afbeelding nog te groot is, verder comprimeren
+              if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
+              if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
+              resolve(result);
+            } catch {
+              // iOS blokkeert soms canvas export (tainted canvas) — stuur origineel
+              const raw = reader.result as string;
+              const mime = raw.slice(5, raw.indexOf(";"));
+              if (["image/jpeg","image/png","image/webp","image/gif"].includes(mime)) {
+                resolve(raw);
+              } else {
+                reject(new Error(`Afbeeldingsformaat niet ondersteund (${mime || "onbekend"}). Maak een screenshot en upload dat.`));
+              }
             }
-            const canvas = document.createElement("canvas");
-            canvas.width = w; canvas.height = h;
-            canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-            let result = canvas.toDataURL("image/jpeg", 0.80);
-            // Als de afbeelding nog te groot is, verder comprimeren
-            if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
-            if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
-            resolve(result);
           };
           img.onerror = () => reject(new Error(`Afbeelding kon niet worden geladen (${file.type || "onbekend formaat"}). Probeer een PNG of JPEG screenshot.`));
           img.src = reader.result as string;
@@ -192,12 +205,13 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
 
       setPreview(dataUrl);
       onPreview?.(dataUrl);
+      const mime = dataUrl.slice(5, dataUrl.indexOf(";")) || "image/jpeg";
       const base64 = dataUrl.split(",")[1];
 
       const response = await fetch("/api/scan-werkbon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64, mediaType: "image/jpeg" }),
+        body: JSON.stringify({ base64, mediaType: mime }),
       });
 
       const data = await response.json();
