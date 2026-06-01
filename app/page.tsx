@@ -43,6 +43,23 @@ function accuLeeftijd(datumStr: string) {
   if (!datumStr) return null;
   return new Date().getFullYear() - new Date(datumStr).getFullYear();
 }
+// Converteert datumstrings naar YYYY-MM-DD (vereist door <input type="date">)
+// Ondersteunt: "DD-MM-YYYY", "DD/MM/YYYY", "DD.MM.YYYY", Dutch maandnamen, etc.
+function normalizeerDatum(str: string): string {
+  if (!str) return "";
+  const s = String(str).trim();
+  // Al in correct formaat YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // DD-MM-YYYY of DD/MM/YYYY of DD.MM.YYYY
+  const dmy = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
+  // Dutch month names: "15 maart 2026" / "15-maart-2026"
+  const nlMaanden: Record<string,string> = { januari:"01",februari:"02",maart:"03",april:"04",mei:"05",juni:"06",juli:"07",augustus:"08",september:"09",oktober:"10",november:"11",december:"12" };
+  const nlMatch = s.toLowerCase().match(/^(\d{1,2})[-\s]([a-z]+)[-\s](\d{4})$/);
+  if (nlMatch && nlMaanden[nlMatch[2]]) return `${nlMatch[3]}-${nlMaanden[nlMatch[2]]}-${nlMatch[1].padStart(2,"0")}`;
+  // Onbekend formaat — leeg teruggeven zodat het veld leeg blijft
+  return "";
+}
 
 const defaultBrandmeldChecklist = [
   { vraag: "8. Algemeen start: Is de BMI voorzien van de benodigde instructietekst met acties na reset brandalarm? Zo nee, aanbrengen met Dymo.", type: "vraag" },
@@ -731,7 +748,12 @@ export default function App() {
               <WerkbonScanner
                 key={scannerKey}
                 onResult={(data: any) => {
-                  setInfo(prev => ({ ...prev, ...data }));
+                  // Normaliseer datum naar YYYY-MM-DD zodat <input type="date"> geen foutmelding geeft
+                  const genormaliseerdeDatum = data.datum ? normalizeerDatum(data.datum) : undefined;
+                  const schoneData = genormaliseerdeDatum !== undefined
+                    ? { ...data, datum: genormaliseerdeDatum }
+                    : data;
+                  setInfo(prev => ({ ...prev, ...schoneData }));
                   if (data.projectnaam) {
                     setLogboek(prev => prev.map(rij => rij.garage === "" ? { ...rij, garage: data.projectnaam } : rij));
                   }
