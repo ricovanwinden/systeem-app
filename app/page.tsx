@@ -163,9 +163,21 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
     setMelding("Werkbon wordt gelezen...");
 
     try {
-      const dataUrl: string = await new Promise((resolve, reject) => {
+      // Stap 1: lees bestand als data URL (apart van canvas — zodat fouten niet door elkaar lopen)
+      const rawDataUrl: string = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
+          if (typeof reader.result === "string" && reader.result.length > 10) resolve(reader.result);
+          else reject(new Error("Bestand kon niet worden gelezen."));
+        };
+        reader.onerror = () => reject(new Error("Bestand kon niet worden gelezen."));
+        reader.readAsDataURL(file);
+      });
+
+      // Stap 2: probeer te verkleinen via canvas — als dit om welke reden dan ook mislukt, stuur origineel
+      let dataUrl = rawDataUrl;
+      try {
+        dataUrl = await new Promise<string>((resolve) => {
           const img = new Image();
           img.onload = () => {
             try {
@@ -178,35 +190,29 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
               const canvas = document.createElement("canvas");
               canvas.width = w; canvas.height = h;
               const ctx = canvas.getContext("2d");
-              if (!ctx) throw new Error("canvas");
+              if (!ctx) { resolve(rawDataUrl); return; }
               ctx.drawImage(img, 0, 0, w, h);
               let result = canvas.toDataURL("image/jpeg", 0.80);
-              // Als de afbeelding nog te groot is, verder comprimeren
               if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.60);
               if (result.length > 2_800_000) result = canvas.toDataURL("image/jpeg", 0.45);
               resolve(result);
-            } catch {
-              // iOS blokkeert soms canvas export (tainted canvas) — stuur origineel
-              const raw = reader.result as string;
-              const mime = raw.slice(5, raw.indexOf(";"));
-              if (["image/jpeg","image/png","image/webp","image/gif"].includes(mime)) {
-                resolve(raw);
-              } else {
-                reject(new Error(`Afbeeldingsformaat niet ondersteund (${mime || "onbekend"}). Maak een screenshot en upload dat.`));
-              }
-            }
+            } catch { resolve(rawDataUrl); } // canvas mislukt → origineel gebruiken
           };
-          img.onerror = () => reject(new Error(`Afbeelding kon niet worden geladen (${file.type || "onbekend formaat"}). Probeer een PNG of JPEG screenshot.`));
-          img.src = reader.result as string;
-        };
-        reader.onerror = () => reject(new Error("Bestand kon niet worden gelezen."));
-        reader.readAsDataURL(file);
-      });
+          img.onerror = () => resolve(rawDataUrl); // laad-fout → origineel gebruiken
+          try { img.src = rawDataUrl; } catch { resolve(rawDataUrl); } // img.src gooit soms op iOS
+        });
+      } catch { dataUrl = rawDataUrl; } // canvas-promise crasht → origineel gebruiken
+
+      // Controleer of het formaat door de AI ondersteund wordt
+      const mime = (dataUrl.includes(";") ? dataUrl.slice(5, dataUrl.indexOf(";")) : "") || "image/jpeg";
+      if (!["image/jpeg","image/png","image/webp","image/gif"].includes(mime)) {
+        throw new Error(`Formaat niet ondersteund (${mime || file.type || "onbekend"}). Maak een screenshot (PNG/JPEG) en probeer opnieuw.`);
+      }
 
       setPreview(dataUrl);
       onPreview?.(dataUrl);
-      const mime = dataUrl.slice(5, dataUrl.indexOf(";")) || "image/jpeg";
       const base64 = dataUrl.split(",")[1];
+      if (!base64) throw new Error("Afbeelding is leeg of ongeldig.");
 
       const response = await fetch("/api/scan-werkbon", {
         method: "POST",
