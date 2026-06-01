@@ -163,6 +163,23 @@ function WerkbonScanner({ onResult, onExtraData, onPreview, onSystemen }: { onRe
     setMelding("Werkbon wordt gelezen...");
 
     try {
+      // Stap 0: controleer formaat via magic bytes — HEIC heeft 'ftyp' op bytes 4-7
+      // iOS geeft file.type vaak als "" voor HEIC, dus MIME-check alleen is niet genoeg
+      const isHeic = await new Promise<boolean>((resolve) => {
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const b = new Uint8Array(r.result as ArrayBuffer);
+            resolve(b[4]===0x66 && b[5]===0x74 && b[6]===0x79 && b[7]===0x70); // 'ftyp'
+          } catch { resolve(false); }
+        };
+        r.onerror = () => resolve(false);
+        r.readAsArrayBuffer(file.slice(0, 12));
+      });
+      if (isHeic || file.type === "image/heic" || file.type === "image/heif") {
+        throw new Error("📵 Je foto is HEIC — dit formaat werkt niet.\n\nFix op iPhone: Instellingen → Camera → Formaten → kies 'Meest compatibel'. Daarna worden foto's als JPEG opgeslagen en werkt het wel.");
+      }
+
       // Stap 1: lees bestand als data URL (apart van canvas — zodat fouten niet door elkaar lopen)
       const rawDataUrl: string = await new Promise((resolve, reject) => {
         const reader = new FileReader();
