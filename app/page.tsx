@@ -35,7 +35,8 @@ interface VentilatieRij {
 }
 interface LogboekRij { garage: string; opmerking: string; storing: string; automelder: string; handmelder: string; }
 interface VentStroomRij { naam: string; stroom: string; }
-interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; }
+interface DraaiUrenRij { naam: string; vorig: string; huidig: string; }
+interface VentStroomData { regelkastDag: string; regelkastVollast: string; afvoer: VentStroomRij[]; stuwdruk: VentStroomRij[]; draaiUren: DraaiUrenRij[]; }
 interface NotitieFoto { id: number; dataUrl: string; naam: string; }
 
 function berekenAccuBrandmeld(rust: number, alarm: number, uren: number) {
@@ -444,7 +445,7 @@ const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnu
 const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", storingen: [], checklistItems: defaultBrandmeldChecklist };
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", geluidsdrukAchtergrond: "", geluidsdrukAlarmZonder: "", geluidsdrukAlarmMet: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
-const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
+const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }], draaiUren: [{ naam: "AV1", vorig: "", huidig: "" }] };
 const defaultLogboek: LogboekRij[] = Array(4).fill(null).map(() => ({ garage: "", opmerking: "", storing: "", automelder: "", handmelder: "" }));
 
 export default function App() {
@@ -524,7 +525,7 @@ export default function App() {
       }
     } catch {}
     try {
-      const s = localStorage.getItem("werkbon_ventstroom"); if (s) setVentStroom(JSON.parse(s));
+      const s = localStorage.getItem("werkbon_ventstroom"); if (s) { const p = JSON.parse(s); if (!p.draaiUren) p.draaiUren = [{ naam: "AV1", vorig: "", huidig: "" }]; setVentStroom(p); }
     } catch {}
     try {
       const s = localStorage.getItem("werkbon_logboek"); if (s) setLogboek(JSON.parse(s));
@@ -1356,6 +1357,56 @@ export default function App() {
                 </div>
               </div>
             </Card>
+            <Card icon="⏱️" title="Draaiuren frequentieregelaars">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: VW_MUTED }}>Vul de vorige en huidige aflees in; het verschil wordt automatisch berekend.</span>
+                <button onClick={() => setVentStroom({...ventStroom, draaiUren: [...(ventStroom.draaiUren||[]), { naam: `AV${(ventStroom.draaiUren||[]).length+1}`, vorig: "", huidig: "" }]})}
+                  style={{ background: "#f0f9ff", color: "#0369a1", border: "1.5px solid #bae6fd", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  + Toevoegen
+                </button>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      {["Naam", "Vorige aflees (uren)", "Huidige aflees (uren)", "Verschil (uren)", ""].map(h => (
+                        <th key={h} style={{ padding: "8px 12px", textAlign: "left", background: "#f8fafc", color: "#64748b", fontWeight: 700, fontSize: 11, letterSpacing: "0.05em", textTransform: "uppercase" as const, borderBottom: "2px solid #e2e8f0" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(ventStroom.draaiUren||[]).map((r, i) => {
+                      const verschil = (r.huidig !== "" && r.vorig !== "") ? parseFloat(r.huidig) - parseFloat(r.vorig) : null;
+                      return (
+                        <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "6px 8px" }}>
+                            <input style={{...F, minWidth: 80, fontSize: 12}} value={r.naam} onChange={e => { const a=[...(ventStroom.draaiUren||[])]; a[i]={...a[i],naam:e.target.value}; setVentStroom({...ventStroom,draaiUren:a}); }} />
+                          </td>
+                          <td style={{ padding: "6px 8px" }}>
+                            <input style={{...F, minWidth: 110, fontSize: 12}} type="number" step="1" min="0" placeholder="bijv. 12450" value={r.vorig} onChange={e => { const a=[...(ventStroom.draaiUren||[])]; a[i]={...a[i],vorig:e.target.value}; setVentStroom({...ventStroom,draaiUren:a}); }} />
+                          </td>
+                          <td style={{ padding: "6px 8px" }}>
+                            <input style={{...F, minWidth: 110, fontSize: 12}} type="number" step="1" min="0" placeholder="bijv. 13820" value={r.huidig} onChange={e => { const a=[...(ventStroom.draaiUren||[])]; a[i]={...a[i],huidig:e.target.value}; setVentStroom({...ventStroom,draaiUren:a}); }} />
+                          </td>
+                          <td style={{ padding: "6px 8px" }}>
+                            {verschil !== null
+                              ? <span style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "4px 12px", fontSize: 13, fontWeight: 700, color: "#15803d" }}>{verschil.toLocaleString("nl-NL")} u</span>
+                              : <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>
+                            }
+                          </td>
+                          <td style={{ padding: "6px 8px" }}>
+                            {(ventStroom.draaiUren||[]).length > 1 && (
+                              <button onClick={() => setVentStroom({...ventStroom, draaiUren: (ventStroom.draaiUren||[]).filter((_,j)=>j!==i)})} style={{ background: "#fef2f2", color: "#991b1b", border: "1.5px solid #fca5a5", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>✕</button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
             {ventRijen.map((rij, i) => {
               const metingen = [rij.meting1,rij.meting2,rij.meting3,rij.meting4,rij.meting5].map(m=>parseFloat(m)).filter(m=>!isNaN(m));
               const gem = metingen.length ? metingen.reduce((a,b)=>a+b,0)/metingen.length : null;
