@@ -11,12 +11,14 @@ interface ProjectInfo {
   opdrachtgever: string; projectnaam: string; projectnummer: string; datum: string;
   monteur: string; werkzaamheden: string; onderhoudsinterval: string; storingscontact: string;
 }
+interface StoringRij { datum: string; duurUren: string; omschrijving: string; }
 interface BrandmeldData {
   merkAccu: string; datumPlaatsing: string; ruststroom: string; alarmstroom: string;
   huidigCapaciteit: string; onderhoudscontract: "12" | "24";
   laadspanningAccu1: string; laadspanningAccu2: string;
   restspanningAccu1: string; restspanningAccu2: string;
   geluidsdrukAchtergrond: string; geluidsdrukAlarm: string;
+  storingen: StoringRij[];
   checklistItems: { vraag: string; status: string; opmerking: string; type?: string; eenheid?: string; waarde?: string; linked?: string }[];
 }
 interface GasdetectieData {
@@ -439,7 +441,7 @@ const G2: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr
 const G3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 };
 
 const defaultInfo: ProjectInfo = { opdrachtgever: "", projectnaam: "", projectnummer: "", datum: "", monteur: "", werkzaamheden: "Onderhoud", onderhoudsinterval: "12", storingscontact: "24" };
-const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", checklistItems: defaultBrandmeldChecklist };
+const defaultBm: BrandmeldData = { merkAccu: "", datumPlaatsing: "", ruststroom: "", alarmstroom: "", huidigCapaciteit: "", onderhoudscontract: "24", laadspanningAccu1: "", laadspanningAccu2: "", restspanningAccu1: "", restspanningAccu2: "", geluidsdrukAchtergrond: "", geluidsdrukAlarm: "", storingen: [], checklistItems: defaultBrandmeldChecklist };
 const defaultGas: GasdetectieData = { centraleType: "", noodstroomType: "UPS", upsvermogen: "1000", belasting: "", backupUren: "12", datumGeplaatst: "", serienummer: "", ruststroom: "", alarmstroom: "", bouwjaarAccu: "", huidigCapaciteit: "", geluidsdrukAchtergrond: "", geluidsdrukAlarmZonder: "", geluidsdrukAlarmMet: "", checklistItems: defaultGasChecklist };
 const defaultVentRijen: VentilatieRij[] = [{ type: "Afvoerventilator", naam: "AV1", breedte: "", hoogte: "", diameter: "", meting1: "", meting2: "", meting3: "", meting4: "", meting5: "" }];
 const defaultVentStroom: VentStroomData = { regelkastDag: "", regelkastVollast: "", afvoer: [{ naam: "AV1", stroom: "" }], stuwdruk: [{ naam: "SV1", stroom: "" }] };
@@ -486,6 +488,7 @@ export default function App() {
         if (!parsed.checklistItems?.some((item: any) => item.vraag?.startsWith("8."))) {
           parsed.checklistItems = defaultBrandmeldChecklist;
         }
+        if (!parsed.storingen) parsed.storingen = [];
         setBm(parsed);
       }
     } catch {}
@@ -883,6 +886,57 @@ export default function App() {
                   <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
                     <StatCard label="Verschil" value={verschil.toFixed(1)+" dB"} color={verschil >= 5 ? "#10b981" : "#ef4444"} sub={verschil >= 5 ? "Voldoende" : "Te laag (min. 5 dB)"} />
                   </div>
+                );
+              })()}
+            </Card>
+
+            <Card icon="📊" title="Systeembeschikbaarheid">
+              {(() => {
+                const maanden = parseInt(info.onderhoudsinterval) || 12;
+                const periodeUren = maanden * (365.25 / 12) * 24;
+                const totaalUitval = (bm.storingen || []).reduce((s, r) => s + (parseFloat(r.duurUren) || 0), 0);
+                const beschikbaar = ((periodeUren - totaalUitval) / periodeUren) * 100;
+                const voldoet = totaalUitval === 0 || beschikbaar >= 99.5;
+                const heeftData = (bm.storingen || []).length > 0;
+                return (
+                  <>
+                    <div style={{ fontSize: 12, color: VW_MUTED, marginBottom: 14 }}>
+                      Berekening conform NEN 2535. Observatieperiode: <strong>{maanden} maanden</strong> ({Math.round(periodeUren).toLocaleString("nl-NL")} uur). Minimale eis: <strong>99,5%</strong>.
+                    </div>
+
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, marginBottom: 6, padding: "0 4px" }}>
+                        {["Datum storing", "Duur (uur)", "Omschrijving", ""].map(h => (
+                          <span key={h} style={{ fontSize: 10, fontWeight: 700, color: VW_MUTED, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>{h}</span>
+                        ))}
+                      </div>
+                      {(bm.storingen || []).map((r, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                          <input style={{...F, fontSize: 12, padding: "7px 10px"}} type="date" value={r.datum} onChange={e => { const a=[...(bm.storingen||[])]; a[i]={...a[i],datum:e.target.value}; setBm({...bm,storingen:a}); }} />
+                          <input style={{...F, fontSize: 12, padding: "7px 10px"}} type="number" step="0.1" min="0" placeholder="bijv. 2.5" value={r.duurUren} onChange={e => { const a=[...(bm.storingen||[])]; a[i]={...a[i],duurUren:e.target.value}; setBm({...bm,storingen:a}); }} />
+                          <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="omschrijving storing" value={r.omschrijving} onChange={e => { const a=[...(bm.storingen||[])]; a[i]={...a[i],omschrijving:e.target.value}; setBm({...bm,storingen:a}); }} />
+                          <button onClick={() => { const a=[...(bm.storingen||[])]; a.splice(i,1); setBm({...bm,storingen:a}); }} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" as const }}>✕</button>
+                        </div>
+                      ))}
+                      <button onClick={() => setBm({...bm, storingen: [...(bm.storingen||[]), { datum: "", duurUren: "", omschrijving: "" }]})} style={{ background: VW_SURF2, color: VW_TEXT, border: `1px solid ${VW_BORDER}`, borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, marginTop: 4 }}>+ Storing toevoegen</button>
+                    </div>
+
+                    {heeftData && (
+                      <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" as const }}>
+                        <StatCard label="Totale uitvalduur" value={totaalUitval.toFixed(1) + " uur"} sub={`= ${Math.round(totaalUitval * 60)} min`} />
+                        <StatCard label="Beschikbaarheid" value={beschikbaar.toFixed(3) + "%"} color={voldoet ? "#10b981" : "#ef4444"} sub={voldoet ? "Voldoet ✓" : "Voldoet niet ✗"} />
+                        <StatCard label="Eis" value="≥ 99,500%" sub="conform NEN 2535" />
+                      </div>
+                    )}
+                    {!heeftData && (
+                      <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" as const }}>
+                        <StatCard label="Beschikbaarheid" value="100,000%" color="#10b981" sub="Geen storingen geregistreerd ✓" />
+                        <StatCard label="Eis" value="≥ 99,500%" sub="conform NEN 2535" />
+                      </div>
+                    )}
+                    {heeftData && !voldoet && <Alert type="danger" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet niet aan de NEN 2535 eis van 99,5%.`} />}
+                    {heeftData && voldoet && <Alert type="success" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet aan de NEN 2535 eis van 99,5%.`} />}
+                  </>
                 );
               })()}
             </Card>
