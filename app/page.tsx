@@ -755,19 +755,16 @@ export default function App() {
               Systeem App{info.opdrachtgever ? ` · ${info.opdrachtgever}` : ""}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <button onClick={slaOpAlsProject} style={{ background: VW_CYAN, color: "#0a0a12", border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
-              Opslaan
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+            <button onClick={slaOpAlsProject} title="Opslaan" style={{ background: VW_CYAN, color: "#0a0a12", border: "none", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>💾</button>
+            <button onClick={deelProject} title="Opslaan voor iedereen (gedeeld)" style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>☁️</button>
+            <button onClick={() => { setToonProjecten(true); laadGedeeldeProjecten(); }} title="Projecten" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15, position: "relative" as const }}>
+              📁 {projecten.length > 0 && <span style={{ position: "absolute" as const, top: 2, right: 2, background: "#3b82f6", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{projecten.length}</span>}
             </button>
-            <button onClick={deelProject} title="Opslaan voor iedereen (gedeeld)" style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 7, padding: "8px 12px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>☁️</button>
-            {(opslaanMelding || delenMelding) && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{delenMelding || opslaanMelding}</span>}
-            <button onClick={() => { setToonProjecten(true); laadGedeeldeProjecten(); }} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
-              📂 {projecten.length > 0 && <span style={{ position: "absolute" as const, top: 2, right: 2, background: "#3b82f6", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{projecten.length}</span>}
-            </button>
-            <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
-            <button onClick={() => window.print()} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>🖨️</button>
+            <button onClick={downloadBestand} title="Downloaden" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>⬇️</button>
+            <button onClick={() => window.print()} title="Afdrukken" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>🖨️</button>
             <button onClick={() => setToonCodes(v => !v)} title="Standaard installateurscodes" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>🔑</button>
-            <button onClick={nieuwProject} style={{ background: "transparent", color: "#6b7280", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>+ Nieuw</button>
+            <button onClick={nieuwProject} title="Nieuw project" style={{ background: "transparent", color: "#6b7280", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 10px", cursor: "pointer", fontSize: 13 }}>＋</button>
           </div>
         </div>
         {/* Onderste rij: tabs op volledige breedte */}
@@ -787,6 +784,13 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      {/* TOAST */}
+      {(opslaanMelding || delenMelding) && (
+        <div style={{ position: "fixed" as const, bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#1f2937", color: "#fff", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: "0 4px 20px rgba(0,0,0,0.4)", whiteSpace: "nowrap" as const, maxWidth: "90vw", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {delenMelding || opslaanMelding}
+        </div>
+      )}
 
       {/* CONTENT */}
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 20px" }}>
