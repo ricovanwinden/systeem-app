@@ -765,6 +765,7 @@ export default function App() {
             <button onClick={() => window.print()} title="Afdrukken" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>🖨️</button>
             <button onClick={() => setToonCodes(v => !v)} title="Standaard installateurscodes" style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 15 }}>🔑</button>
             <button onClick={nieuwProject} title="Nieuw project" style={{ background: "transparent", color: "#6b7280", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 10px", cursor: "pointer", fontSize: 13 }}>＋</button>
+            <a href="/help" title="Handleiding" style={{ background: "transparent", color: "#6b7280", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 10px", cursor: "pointer", fontSize: 13, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>?</a>
           </div>
         </div>
         {/* Onderste rij: tabs op volledige breedte */}
