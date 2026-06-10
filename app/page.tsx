@@ -639,8 +639,9 @@ export default function App() {
       setTimeout(() => setDelenMelding(""), 3000);
     } else {
       const fout = await res.json().catch(() => ({}));
-      setDelenMelding(`❌ ${fout.error || "Mislukt"}`);
-      setTimeout(() => setDelenMelding(""), 4000);
+      const msg = (fout.error || "Mislukt").slice(0, 80);
+      setDelenMelding(`❌ ${msg}`);
+      setTimeout(() => setDelenMelding(""), 8000);
     }
   }
 
