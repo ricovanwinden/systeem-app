@@ -470,6 +470,10 @@ export default function App() {
   const [actieveTabs, setActieveTabs] = useState<string[]>(["brandmeld", "gasdetectie", "ventilatie", "logboek"]);
   const [projecten, setProjecten] = useState<any[]>([]);
   const [toonProjecten, setToonProjecten] = useState(false);
+  const [projectenTabBlad, setProjectenTabBlad] = useState<"lokaal"|"gedeeld">("lokaal");
+  const [gedeeldeProjecten, setGedeeldeProjecten] = useState<any[]>([]);
+  const [gedeeldLaden, setGedeeldLaden] = useState(false);
+  const [delenMelding, setDelenMelding] = useState("");
   const [openMap, setOpenMap] = useState<string | null>(null);
   const [zoekterm, setZoekterm] = useState("");
   const [werkbonExtra, setWerkbonExtra] = useState<{ label: string; waarde: string }[]>([]);
@@ -599,6 +603,49 @@ export default function App() {
     setTimeout(() => setOpslaanMelding(""), 3000);
   }
 
+  function getToken(): string {
+    return localStorage.getItem("sessionToken") ?? "";
+  }
+
+  async function laadGedeeldeProjecten() {
+    setGedeeldLaden(true);
+    try {
+      const res = await fetch("/api/projecten", { headers: { Authorization: `Bearer ${getToken()}` } });
+      if (res.ok) setGedeeldeProjecten(await res.json());
+    } finally {
+      setGedeeldLaden(false);
+    }
+  }
+
+  async function deelProject() {
+    const projectnaam = info.projectnummer || info.projectnaam || info.opdrachtgever || "Naamloos project";
+    const { notitieFotos: _, ...dataZonderFotos } = { info, bm, gas, ventRijen, ventChecklist, ventStroom, logboek, aantekeningen, notitieFotos, actieveTabs };
+    const res = await fetch("/api/projecten", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        projectnummer: info.projectnummer,
+        projectnaam,
+        opdrachtgever: info.opdrachtgever,
+        datum: info.datum,
+        werkzaamheden: info.werkzaamheden,
+        data: dataZonderFotos,
+      }),
+    });
+    if (res.ok) {
+      setDelenMelding("✅ Gedeeld!");
+      setTimeout(() => setDelenMelding(""), 3000);
+    } else {
+      setDelenMelding("❌ Mislukt");
+      setTimeout(() => setDelenMelding(""), 3000);
+    }
+  }
+
+  async function verwijderGedeeldProject(id: string) {
+    await fetch(`/api/projecten?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
+    setGedeeldeProjecten(prev => prev.filter(p => p.id !== id));
+  }
+
   function laadProject(p: any) {
     const label = p.projectnaam || p.naam || "dit project";
     if (!confirm(`Huidig project wordt vervangen door "${label}". Doorgaan?`)) return;
@@ -708,8 +755,9 @@ export default function App() {
             <button onClick={slaOpAlsProject} style={{ background: VW_CYAN, color: "#0a0a12", border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
               Opslaan
             </button>
-            {opslaanMelding && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{opslaanMelding}</span>}
-            <button onClick={() => setToonProjecten(true)} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
+            <button onClick={deelProject} title="Opslaan voor iedereen (gedeeld)" style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 7, padding: "8px 12px", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>☁️</button>
+            {(opslaanMelding || delenMelding) && <span style={{ color: "#10b981", fontSize: 11, fontWeight: 600, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{delenMelding || opslaanMelding}</span>}
+            <button onClick={() => { setToonProjecten(true); laadGedeeldeProjecten(); }} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13, position: "relative" as const }}>
               📂 {projecten.length > 0 && <span style={{ position: "absolute" as const, top: 2, right: 2, background: "#3b82f6", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{projecten.length}</span>}
             </button>
             <button onClick={downloadBestand} style={{ background: "rgba(255,255,255,0.08)", color: "#d1d5db", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "7px 11px", cursor: "pointer", fontSize: 13 }}>⬇️</button>
@@ -1687,10 +1735,10 @@ export default function App() {
                   )}
                   <div>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: VW_TEXT }}>
-                      {openMap ? `📂 ${openMap}` : "Opgeslagen projecten"}
+                      {openMap ? `📂 ${openMap}` : projectenTabBlad === "gedeeld" ? "☁️ Gedeelde projecten" : "Opgeslagen projecten"}
                     </h2>
                     <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>
-                      {openMap ? `${mappen[openMap]?.length ?? 0} bon(nen)` : `${gefilterd.length} map(pen)`}
+                      {openMap ? `${mappen[openMap]?.length ?? 0} bon(nen)` : projectenTabBlad === "gedeeld" ? `${gedeeldeProjecten.length} project(en)` : `${gefilterd.length} map(pen)`}
                     </p>
                   </div>
                 </div>
@@ -1708,6 +1756,15 @@ export default function App() {
                 </div>
               </div>
 
+              {/* TABBLADEN lokaal / gedeeld */}
+              {!openMap && (
+                <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+                  {([["lokaal", "💾 Mijn projecten"], ["gedeeld", "☁️ Gedeeld"]] as const).map(([id, label]) => (
+                    <button key={id} onClick={() => { setProjectenTabBlad(id); setZoekterm(""); }} style={{ padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: projectenTabBlad === id ? 700 : 400, background: projectenTabBlad === id ? VW_TEXT : VW_SURF2, color: projectenTabBlad === id ? "#fff" : VW_MUTED }}>{label}</button>
+                  ))}
+                </div>
+              )}
+
               {/* ZOEKBALK (alleen op mappenlijst) */}
               {!openMap && (
                 <input
@@ -1718,8 +1775,8 @@ export default function App() {
                 />
               )}
 
-              {/* MAPPENLIJST */}
-              {!openMap && (
+              {/* MAPPENLIJST (lokaal) */}
+              {!openMap && projectenTabBlad === "lokaal" && (
                 alleProjecten.length === 0 ? (
                   <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
@@ -1750,8 +1807,8 @@ export default function App() {
                 )
               )}
 
-              {/* BONNENLIJST IN MAP */}
-              {openMap && (
+              {/* BONNENLIJST IN MAP (lokaal) */}
+              {openMap && projectenTabBlad === "lokaal" && (
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
                   {(mappen[openMap] ?? []).sort((a: any, b: any) => b.id - a.id).map((p: any) => (
                     <div key={p.id} style={{ background: VW_SURF2, border: `1.5px solid ${VW_BORDER}`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -1764,6 +1821,45 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* GEDEELDE PROJECTEN */}
+              {!openMap && projectenTabBlad === "gedeeld" && (
+                gedeeldLaden ? (
+                  <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>Laden…</div>
+                ) : (() => {
+                  const gefilterdGedeeld = gedeeldeProjecten.filter(p =>
+                    (p.projectnaam || p.opdrachtgever || "").toLowerCase().includes(zoekterm.toLowerCase()) ||
+                    (p.opdrachtgever || "").toLowerCase().includes(zoekterm.toLowerCase())
+                  );
+                  const gebruiker = (() => { try { return JSON.parse(localStorage.getItem("gebruiker") ?? "{}"); } catch { return {}; } })();
+                  return gefilterdGedeeld.length === 0 ? (
+                    <div style={{ textAlign: "center" as const, padding: "40px 0", color: "#94a3b8" }}>
+                      <div style={{ fontSize: 40, marginBottom: 12 }}>☁️</div>
+                      <p style={{ margin: 0 }}>{zoekterm ? `Geen resultaten voor "${zoekterm}".` : "Nog niets gedeeld. Druk op ☁️ om een project te delen."}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                      {gefilterdGedeeld.map((p: any) => (
+                        <div key={p.id} style={{ background: VW_SURF2, border: `1.5px solid ${VW_BORDER}`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: VW_TEXT }}>{p.datum || "geen datum"} — {p.opdrachtgever || "—"}</div>
+                            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                              {p.projectnaam || p.projectnummer || ""}{p.werkzaamheden ? ` · ${p.werkzaamheden}` : ""}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                              Gedeeld door <strong>{p.opgeslagen_door}</strong> · {new Date(p.opgeslagen_op).toLocaleString("nl-NL")}
+                            </div>
+                          </div>
+                          <button onClick={() => laadProject(p)} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Openen</button>
+                          {(gebruiker.rol === "admin" || gebruiker.naam === p.opgeslagen_door) && (
+                            <button onClick={() => { if (confirm("Gedeeld project verwijderen?")) verwijderGedeeldProject(p.id); }} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()
               )}
 
             </div>
