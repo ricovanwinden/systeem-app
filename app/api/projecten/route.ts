@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return Response.json({ error: `Crash: ${msg}` }, { status: 500 });
+    const cause = e instanceof Error && (e as any).cause instanceof Error ? (e as any).cause.message : "";
+    return Response.json({ error: `Crash: ${msg}${cause ? ` (${cause})` : ""}. URL: ${SUPABASE_URL || "LEEG"}` }, { status: 500 });
   }
 }
 
