@@ -611,7 +611,7 @@ export default function App() {
   async function laadGedeeldeProjecten() {
     setGedeeldLaden(true);
     try {
-      const res = await fetch("/api/projecten", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const res = await fetch("/api/projecten");
       if (res.ok) setGedeeldeProjecten(await res.json());
     } finally {
       setGedeeldLaden(false);
@@ -620,16 +620,17 @@ export default function App() {
 
   async function deelProject() {
     const projectnaam = info.projectnummer || info.projectnaam || info.opdrachtgever || "Naamloos project";
-    const { notitieFotos: _, ...dataZonderFotos } = { info, bm, gas, ventRijen, ventChecklist, ventStroom, logboek, aantekeningen, notitieFotos, actieveTabs };
+    const { notitieFotos: _fotos, ...dataZonderFotos } = { info, bm, gas, ventRijen, ventChecklist, ventStroom, logboek, aantekeningen, notitieFotos, actieveTabs };
     const res = await fetch("/api/projecten", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectnummer: info.projectnummer,
         projectnaam,
         opdrachtgever: info.opdrachtgever,
         datum: info.datum,
         werkzaamheden: info.werkzaamheden,
+        opgeslagen_door: info.monteur || "Onbekend",
         data: dataZonderFotos,
       }),
     });
@@ -637,13 +638,14 @@ export default function App() {
       setDelenMelding("✅ Gedeeld!");
       setTimeout(() => setDelenMelding(""), 3000);
     } else {
-      setDelenMelding("❌ Mislukt");
-      setTimeout(() => setDelenMelding(""), 3000);
+      const fout = await res.json().catch(() => ({}));
+      setDelenMelding(`❌ ${fout.error || "Mislukt"}`);
+      setTimeout(() => setDelenMelding(""), 4000);
     }
   }
 
   async function verwijderGedeeldProject(id: string) {
-    await fetch(`/api/projecten?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
+    await fetch(`/api/projecten?id=${id}`, { method: "DELETE" });
     setGedeeldeProjecten(prev => prev.filter(p => p.id !== id));
   }
 
