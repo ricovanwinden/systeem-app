@@ -1912,7 +1912,9 @@ export default function App() {
                             </div>
                           </div>
                           <button onClick={() => laadProject(p)} style={{ background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Openen</button>
-                          <button onClick={() => { if (confirm("Gedeeld project verwijderen?")) verwijderGedeeldProject(p.id); }} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+                          {gebruiker.rol === "admin" && (
+                            <button onClick={() => { if (confirm("Gedeeld project verwijderen?")) verwijderGedeeldProject(p.id); }} style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 13, flexShrink: 0 }}>🗑️</button>
+                          )}
                         </div>
                       ))}
                     </div>
