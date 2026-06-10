@@ -896,12 +896,12 @@ export default function App() {
                 const periodeUren = maanden * (365.25 / 12) * 24;
                 const totaalUitval = (bm.storingen || []).reduce((s, r) => s + (parseFloat(r.duurUren) || 0), 0);
                 const beschikbaar = ((periodeUren - totaalUitval) / periodeUren) * 100;
-                const voldoet = totaalUitval === 0 || beschikbaar >= 99.5;
+                const voldoet = totaalUitval === 0 || beschikbaar >= 99.7;
                 const heeftData = (bm.storingen || []).length > 0;
                 return (
                   <>
                     <div style={{ fontSize: 12, color: VW_MUTED, marginBottom: 14 }}>
-                      Berekening conform NEN 2535. Observatieperiode: <strong>{maanden} maanden</strong> ({Math.round(periodeUren).toLocaleString("nl-NL")} uur). Minimale eis: <strong>99,5%</strong>.
+                      Berekening conform NEN 2535. Observatieperiode: <strong>{maanden} maanden</strong> ({Math.round(periodeUren).toLocaleString("nl-NL")} uur). Minimale eis: <strong>99,7%</strong>.
                     </div>
 
                     <div style={{ marginBottom: 12 }}>
@@ -925,17 +925,17 @@ export default function App() {
                       <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" as const }}>
                         <StatCard label="Totale uitvalduur" value={totaalUitval.toFixed(1) + " uur"} sub={`= ${Math.round(totaalUitval * 60)} min`} />
                         <StatCard label="Beschikbaarheid" value={beschikbaar.toFixed(3) + "%"} color={voldoet ? "#10b981" : "#ef4444"} sub={voldoet ? "Voldoet ✓" : "Voldoet niet ✗"} />
-                        <StatCard label="Eis" value="≥ 99,500%" sub="conform NEN 2535" />
+                        <StatCard label="Eis" value="≥ 99,700%" sub="conform NEN 2535" />
                       </div>
                     )}
                     {!heeftData && (
                       <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" as const }}>
                         <StatCard label="Beschikbaarheid" value="100,000%" color="#10b981" sub="Geen storingen geregistreerd ✓" />
-                        <StatCard label="Eis" value="≥ 99,500%" sub="conform NEN 2535" />
+                        <StatCard label="Eis" value="≥ 99,700%" sub="conform NEN 2535" />
                       </div>
                     )}
-                    {heeftData && !voldoet && <Alert type="danger" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet niet aan de NEN 2535 eis van 99,5%.`} />}
-                    {heeftData && voldoet && <Alert type="success" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet aan de NEN 2535 eis van 99,5%.`} />}
+                    {heeftData && !voldoet && <Alert type="danger" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet niet aan de NEN 2535 eis van 99,7%.`} />}
+                    {heeftData && voldoet && <Alert type="success" text={`Systeembeschikbaarheid ${beschikbaar.toFixed(3)}% voldoet aan de NEN 2535 eis van 99,7%.`} />}
                   </>
                 );
               })()}
