@@ -10,12 +10,17 @@ const sbHeaders = {
 };
 
 export async function GET() {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/gedeelde_projecten?select=id,projectnummer,projectnaam,opdrachtgever,datum,werkzaamheden,opgeslagen_door,opgeslagen_op&order=opgeslagen_op.desc&limit=500`,
-    { headers: sbHeaders }
-  );
-  if (!res.ok) return Response.json([], { status: 200 });
-  return Response.json(await res.json());
+  try {
+    if (!SUPABASE_URL || !SERVICE_KEY) return Response.json([], { status: 200 });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/gedeelde_projecten?select=id,projectnummer,projectnaam,opdrachtgever,datum,werkzaamheden,opgeslagen_door,opgeslagen_op&order=opgeslagen_op.desc&limit=500`,
+      { headers: sbHeaders }
+    );
+    if (!res.ok) return Response.json([], { status: 200 });
+    return Response.json(await res.json());
+  } catch {
+    return Response.json([], { status: 200 });
+  }
 }
 
 export async function POST(request: NextRequest) {
