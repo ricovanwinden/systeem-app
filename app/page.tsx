@@ -742,7 +742,7 @@ export default function App() {
   if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: VW_BG, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: VW_BG, fontFamily: "'Segoe UI', system-ui, sans-serif", overflowX: "hidden" as const }}>
 
       {/* HEADER */}
       <div style={{ background: "#111827", borderBottom: "1px solid #1f2937" }}>
@@ -1517,10 +1517,12 @@ export default function App() {
                   </div>
                 );
                 return (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto minmax(150px,1fr)", gap: 12, alignItems: "center", ...rowBg }}>
-                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{item.vraag}</span>
-                    <StatusPill status={item.status} onChange={s => { const a=[...ventChecklist]; a[i]={...a[i],status:s}; setVentChecklist(a); }} />
-                    <input style={{...F, fontSize: 12, padding: "7px 10px"}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],opmerking:e.target.value}; setVentChecklist(a); }} />
+                  <div key={i} style={{ ...rowBg }}>
+                    <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "block", marginBottom: 8 }}>{item.vraag}</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <StatusPill status={item.status} onChange={s => { const a=[...ventChecklist]; a[i]={...a[i],status:s}; setVentChecklist(a); }} />
+                      <input style={{...F, fontSize: 12, padding: "7px 10px", flex: 1, minWidth: 0}} placeholder="opmerking..." value={item.opmerking} onChange={e => { const a=[...ventChecklist]; a[i]={...a[i],opmerking:e.target.value}; setVentChecklist(a); }} />
+                    </div>
                   </div>
                 );
               })}
