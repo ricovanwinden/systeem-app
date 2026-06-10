@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({ projectnummer, projectnaam, opdrachtgever, datum, werkzaamheden, opgeslagen_door: naam, data }),
   });
 
-  const body = await res.text();
+  const resText = await res.text();
   if (!res.ok) {
-    console.error("Supabase fout:", res.status, body);
-    return Response.json({ error: `Supabase ${res.status}: ${body}` }, { status: 500 });
+    console.error("Supabase fout:", res.status, resText);
+    return Response.json({ error: `Supabase ${res.status}: ${resText}` }, { status: 500 });
   }
   return Response.json({ ok: true });
 }
