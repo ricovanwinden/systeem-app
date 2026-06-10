@@ -639,7 +639,7 @@ export default function App() {
       setTimeout(() => setDelenMelding(""), 3000);
     } else {
       const fout = await res.json().catch(() => ({}));
-      const msg = (fout.error || "Mislukt").slice(0, 80);
+      const msg = (fout.error || "Mislukt").slice(0, 200);
       setDelenMelding(`❌ ${msg}`);
       setTimeout(() => setDelenMelding(""), 8000);
     }

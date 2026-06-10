@@ -72,8 +72,10 @@ export async function POST(request: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     const cause = e instanceof Error && (e as any).cause instanceof Error
       ? (e as any).cause.message : "";
+    const name = e instanceof Error ? e.name : "unknown";
+    console.error("[projecten POST] fetch error:", name, msg, cause, "url:", url, "keyLen:", key?.length);
     return Response.json({
-      error: `Verbindingsfout: ${msg}${cause ? ` (${cause})` : ""}. URL: ${url}`,
+      error: `Verbindingsfout: ${name}: ${msg}${cause ? ` (${cause})` : ""}. URL: ${url}`,
     }, { status: 500 });
   }
 }
