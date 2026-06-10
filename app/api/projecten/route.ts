@@ -19,25 +19,32 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { projectnummer, projectnaam, opdrachtgever, datum, werkzaamheden, opgeslagen_door, data } = body;
+  try {
+    if (!SUPABASE_URL) return Response.json({ error: "SUPABASE_URL niet ingesteld" }, { status: 500 });
+    if (!SERVICE_KEY) return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY niet ingesteld" }, { status: 500 });
 
-  if (!data) return Response.json({ error: "Geen data" }, { status: 400 });
+    const body = await request.json();
+    const { projectnummer, projectnaam, opdrachtgever, datum, werkzaamheden, opgeslagen_door, data } = body;
 
-  const naam = opgeslagen_door || "Onbekend";
+    if (!data) return Response.json({ error: "Geen data" }, { status: 400 });
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/gedeelde_projecten`, {
-    method: "POST",
-    headers: { ...sbHeaders, Prefer: "return=representation" },
-    body: JSON.stringify({ projectnummer, projectnaam, opdrachtgever, datum, werkzaamheden, opgeslagen_door: naam, data }),
-  });
+    const naam = opgeslagen_door || "Onbekend";
 
-  const resText = await res.text();
-  if (!res.ok) {
-    console.error("Supabase fout:", res.status, resText);
-    return Response.json({ error: `Supabase ${res.status}: ${resText}` }, { status: 500 });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/gedeelde_projecten`, {
+      method: "POST",
+      headers: { ...sbHeaders, Prefer: "return=representation" },
+      body: JSON.stringify({ projectnummer, projectnaam, opdrachtgever, datum, werkzaamheden, opgeslagen_door: naam, data }),
+    });
+
+    const resText = await res.text();
+    if (!res.ok) {
+      return Response.json({ error: `Supabase ${res.status}: ${resText}` }, { status: 500 });
+    }
+    return Response.json({ ok: true });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return Response.json({ error: `Crash: ${msg}` }, { status: 500 });
   }
-  return Response.json({ ok: true });
 }
 
 export async function DELETE(request: NextRequest) {
