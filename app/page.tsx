@@ -1927,5 +1927,10 @@ export default function App() {
         );
       })()}
     </div>
+
+    {/* Subtiele beheer-link */}
+    <div style={{ textAlign: "center" as const, padding: "20px 0 12px" }}>
+      <a href="/login" style={{ color: "#1f2937", fontSize: 11, textDecoration: "none" }}>beheer</a>
+    </div>
   );
 }
